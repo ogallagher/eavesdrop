@@ -20,6 +20,8 @@ import { TEST_DIR_PATH } from './consts.js'
 import * as util from './util.js'
 import Logger from './logger.js'
 
+import ApiClient from './api_client.js'
+
 // constants
 
 const NAME = 'eavesdrop:tests'
@@ -123,9 +125,22 @@ export function test_request() {
 			}
 			else {
 				log.debug('status code = ' + res.statusCode)
-				log.debug(body.substring(200))
+				log.debug(body.substring(0,200))
 				resolve()
 			}
+		})
+	})
+}
+
+export function test_api_youtube_search() {
+	return new Promise(function(resolve, reject) {
+		let api_client = new ApiClient('api_key')
+		
+		api_client.youtube_search('something')
+		.then(resolve)
+		.catch(function(err) {
+			log.error('api youtube search failed')
+			reject(err)
 		})
 	})
 }

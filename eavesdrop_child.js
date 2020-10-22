@@ -123,6 +123,8 @@ function main() {
 			test_parallel()
 		}
 	}
+	
+	process.exit(0)
 }
 
 // main / exports

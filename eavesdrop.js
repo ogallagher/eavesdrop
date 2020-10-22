@@ -10,7 +10,6 @@ Owen Gallagher
 import fs from 'fs'
 import debug from 'debug'
 import cli_args from 'command-line-args'
-import readline from 'readline'
 
 // local imports
 
@@ -25,8 +24,19 @@ import {
 	test_tests,
 	test_filesystem,
 	test_parallel,
-	test_request
+	test_request,
+	test_api_youtube_search
 } from './tests.js'
+
+import {
+	CMD_PREFIX,
+	CMDS,
+	CLI
+} from './consts.js'
+
+import {
+	log as api_log
+} from './api_client.js'
 
 // constants
 
@@ -67,22 +77,40 @@ let test_selection = []
 
 // methods
 
+function eavesdrop_commands_help() {
+	return `\
+eavesdrop commands:\n\
+	\n\
+	(${CMD_PREFIX}h | ${CMD_PREFIX}help) = show eavesdrop commands\n\
+	\n\
+	(${CMD_PREFIX}q | ${CMD_PREFIX}quit) = quit eavesdrop\
+	`
+}
+
 function show_help() {
-	log.debug('printing help message')
+	log.debug('printing help messages')
 	
 	console.log('\
-(-l | --logging) <level>\n\
-(-t | --test)\n\
-(-T | --tests) <test-selection>\n\
-	<test-selection> = comma-separated list of:\n\
-	[\n\
-		all\n\
-		tests\n\
-		filesystem\n\
-		parallel\n\
-		request\n\
-	]\n\
-(-h | --help)\n'
+cli args:\n\
+	\n\
+	(-l | --logging) <level>\n\
+	\n\
+	(-t | --test)\n\
+	\n\
+	(-T | --tests) <test-selection>\n\
+		<test-selection> = comma-separated list of:\n\
+		[\n\
+			all\n\
+			tests\n\
+			filesystem\n\
+			parallel\n\
+			request\n\
+			api_youtube_search\n\
+		]\n\
+		\n\
+	(-h | --help)\n\
+		\n' + 
+	eavesdrop_commands_help() + '\n'
 	)
 }
 
@@ -91,12 +119,14 @@ function parse_cli_args() {
 	
 	if (options.help) {
 		show_help()
+		finish()
 		process.exit()
 	}
 	else {
 		// set logging levels
 		log.enable(options.logging)
 		test_log.enable(options.logging)
+		api_log.enable(options.logging)
 		
 		log.info('parsing cli args')
 		log.debug(options)
@@ -148,6 +178,12 @@ function tests() {
 			test_promises.push(test_request())
 		}
 		
+		if (all_tests || test_selection.includes('api_youtube_search')) {
+			//api: youtube search
+			log.info('testing api client youtube search')
+			test_promises.push(test_api_youtube_search())
+		}
+		
 		Promise.all(test_promises)
 		.then(function() {
 			resolve()
@@ -158,23 +194,81 @@ function tests() {
 	})
 }
 
-function finish() {
-	console.log('\n=== DONE ===')
+function get_command(input) {
+	/*
+	Returns eavesdrop command, or false, or null if invalid command.
+	*/
+	
+	//remove leading and trailing whitespace
+	input = input.trim().toLowerCase()
+	
+	if (input.charAt(0) == CMD_PREFIX) {
+		let cmd = input.substring(1)
+		
+		if (CMDS.includes(cmd)) {
+			return cmd
+		}
+		else {
+			log.error(`${cmd} is not a valid command`)
+			return null
+		}
+	}
+	else {
+		return false
+	}
+}
+
+function handle_command(input) {
+	/*
+	Returns true if the input was a command.
+	*/
+	let cmd = get_command(input)
+	
+	if (cmd) {
+		if (cmd == 'h' || cmd == 'help') {
+			console.log(eavesdrop_commands_help())
+		}
+		else if (cmd == 'q' || cmd == 'quit') {
+			finish()
+			process.exit()
+		}
+		
+		return true
+	}
+	else if (cmd === null) {
+		return true
+	}
+	else {
+		return false
+	}
+}
+
+function ask(question) {
+	return new Promise(function(resolve) {
+		CLI.question(question, function(response) {
+			if (!handle_command(response)) {
+				resolve(response)
+			}
+			else {
+				resolve(false)
+			}
+		})
+	})
 }
 
 function eavesdrop() {
-	const cl = readline.createInterface({
-	  input: process.stdin,
-	  output: process.stdout
-	})
-	
-	return new Promise(function(resolve,reject) {
-		cl.question('\ninput a phrase you\'d like to hear.\n', function(phrase) {
-			log.info('phrase = ' + phrase)
-			log.error('phrase look-up not yet implemented')
-			
-			cl.close()
-			resolve()
+	return new Promise(function(resolve) {
+		ask('\ninput a phrase you\'d like to hear.\n')
+		.then(function(phrase) {
+			if (phrase) {
+				log.info('phrase = ' + phrase)
+				log.error('phrase look-up not yet implemented')
+				
+				resolve()
+			}
+			else {
+				eavesdrop()
+			}
 		})
 	})
 }
@@ -214,6 +308,12 @@ function main() {
 		eavesdrop()
 		.finally(finish)
 	}
+}
+
+function finish() {
+	CLI.close()
+	
+	console.log('\n=== DONE ===')
 }
 
 // main / exports
