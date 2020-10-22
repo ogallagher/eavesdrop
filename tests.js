@@ -30,10 +30,11 @@ export const log = new Logger(NAME)
 // methods
 
 export function test_tests() {
-	return new Promise(function(resolve,reject) {
+	return new Promise(function(resolve, reject) {
 		log.debug('begin tests module test')
 		log.warning('this doesn\'t test anything program-related')
 		log.debug('tests module testing complete')
+		resolve()
 	})
 }
 

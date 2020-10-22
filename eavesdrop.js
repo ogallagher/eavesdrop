@@ -18,9 +18,20 @@ import {
 	LOG_LEVEL 
 } from './consts.js'
 
+import {
+	init_loggers,
+	finish as util_finish,
+	eavesdrop_commands_help
+} from './util.js'
+
 import Logger from './logger.js'
+
+import {
+	ask,
+	init_translation
+} from './io.js'
+
 import { 
-	log as test_log, 
 	test_tests,
 	test_filesystem,
 	test_parallel,
@@ -29,19 +40,13 @@ import {
 } from './tests.js'
 
 import {
-	CMD_PREFIX,
-	CMDS,
-	CLI
+	CMD_PREFIX
 } from './consts.js'
-
-import {
-	log as api_log
-} from './api_client.js'
 
 // constants
 
 const NAME = PROGRAM_NAME
-const log = new Logger(NAME)
+export const log = new Logger(NAME)
 
 const cli_args_api = [
 	{
@@ -67,6 +72,12 @@ const cli_args_api = [
 		alias: 'T',
 		type: String,
 		defaultValue: ''
+	},
+	{
+		name: 'language',
+		alias: 'L',
+		type: String,
+		defaultValue: ''
 	}
 ]
 
@@ -74,66 +85,62 @@ const cli_args_api = [
 
 let do_tests = false
 let test_selection = []
+let locale = undefined
 
 // methods
 
-function eavesdrop_commands_help() {
-	return `\
-eavesdrop commands:\n\
-	\n\
-	(${CMD_PREFIX}h | ${CMD_PREFIX}help) = show eavesdrop commands\n\
-	\n\
-	(${CMD_PREFIX}q | ${CMD_PREFIX}quit) = quit eavesdrop\
-	`
-}
-
-function show_help() {
-	log.debug('printing help messages')
+function eavesdrop_help() {
+	log.debug('showing help messages')
 	
-	console.log('\
-cli args:\n\
-	\n\
-	(-l | --logging) <level>\n\
-	\n\
-	(-t | --test)\n\
-	\n\
-	(-T | --tests) <test-selection>\n\
-		<test-selection> = comma-separated list of:\n\
-		[\n\
-			all\n\
-			tests\n\
-			filesystem\n\
-			parallel\n\
-			request\n\
-			api_youtube_search\n\
-		]\n\
-		\n\
-	(-h | --help)\n\
-		\n' + 
-	eavesdrop_commands_help() + '\n'
-	)
+	return `
+cli args:
+	(-l | --logging) <level>
+
+	(-L | --language) <locale>
+		<locale> = locale name (language-region combination; ex. en-US)
+	
+	(-t | --test)
+
+	(-T | --tests) <test-selection>
+		<test-selection> = comma-separated list of:
+		[
+			all
+			tests
+			filesystem
+			parallel
+			request
+			api_youtube_search
+		]
+
+	(-h | --help)
+	
+${eavesdrop_commands_help()}
+`
 }
 
 function parse_cli_args() {
 	let options = cli_args(cli_args_api)
 	
 	if (options.help) {
-		show_help()
+		console.log(eavesdrop_help())
 		finish()
 		process.exit()
 	}
 	else {
 		// set logging levels
-		log.enable(options.logging)
-		test_log.enable(options.logging)
-		api_log.enable(options.logging)
+		init_loggers(options.logging)
 		
 		log.info('parsing cli args')
 		log.debug(options)
 	
 		log.info('set logging level to ' + options.logging)
 		
-		//testing
+		// set locale
+		if (options.language != '') {
+			locale = options.language
+		}
+		
+		// testing
 		if (options.test || options.tests != '') {
 			do_tests = true
 			
@@ -194,68 +201,6 @@ function tests() {
 	})
 }
 
-function get_command(input) {
-	/*
-	Returns eavesdrop command, or false, or null if invalid command.
-	*/
-	
-	//remove leading and trailing whitespace
-	input = input.trim().toLowerCase()
-	
-	if (input.charAt(0) == CMD_PREFIX) {
-		let cmd = input.substring(1)
-		
-		if (CMDS.includes(cmd)) {
-			return cmd
-		}
-		else {
-			log.error(`${cmd} is not a valid command`)
-			return null
-		}
-	}
-	else {
-		return false
-	}
-}
-
-function handle_command(input) {
-	/*
-	Returns true if the input was a command.
-	*/
-	let cmd = get_command(input)
-	
-	if (cmd) {
-		if (cmd == 'h' || cmd == 'help') {
-			console.log(eavesdrop_commands_help())
-		}
-		else if (cmd == 'q' || cmd == 'quit') {
-			finish()
-			process.exit()
-		}
-		
-		return true
-	}
-	else if (cmd === null) {
-		return true
-	}
-	else {
-		return false
-	}
-}
-
-function ask(question) {
-	return new Promise(function(resolve) {
-		CLI.question(question, function(response) {
-			if (!handle_command(response)) {
-				resolve(response)
-			}
-			else {
-				resolve(false)
-			}
-		})
-	})
-}
-
 function eavesdrop() {
 	return new Promise(function(resolve) {
 		ask('\ninput a phrase you\'d like to hear.\n')
@@ -268,6 +213,7 @@ function eavesdrop() {
 			}
 			else {
 				eavesdrop()
+				.then(resolve)
 			}
 		})
 	})
@@ -278,41 +224,49 @@ function main() {
 	
 	parse_cli_args()
 	
-	if (do_tests) {
-		tests()
-		.then(function() {
-			log.info('all tests passed')
+	init_translation(locale)
+	.then(function() {
+		log.debug('initialized translation module')
+	})
+	.catch(function(e) {
+		log.error('failed to initialize translation module')
+	})
+	.finally(function() {
+		if (do_tests) {
+			tests()
+			.then(function() {
+				log.info('all tests passed')
 			
+				eavesdrop()
+				.finally(finish)
+			})
+			.catch(function(failures) {
+				log.error(`${failures.length} tests failed`)
+			
+				try {
+					for (failure of failures) {
+						log.error(failure)
+					}
+				}
+				catch (e) {
+					log.debug(failures)
+				}
+				finally {
+					finish()
+				}
+			})
+		}
+		else {
+			log.info('running eavesdrop without tests')
+		
 			eavesdrop()
 			.finally(finish)
-		})
-		.catch(function(failures) {
-			log.error(`${failures.length} tests failed`)
-			
-			try {
-				for (failure of failures) {
-					log.error(failure)
-				}
-			}
-			catch (e) {
-				log.debug(failures)
-			}
-			finally {
-				finish()
-			}
-		})
-	}
-	else {
-		log.info('running eavesdrop without tests')
-		
-		eavesdrop()
-		.finally(finish)
-	}
+		}
+	})
 }
 
 function finish() {
-	CLI.close()
-	
+	util_finish()
 	console.log('\n=== DONE ===')
 }
 

@@ -38,3 +38,5 @@ export const CLI = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 })
+
+export const LOCALE_DIR = './locales/'
