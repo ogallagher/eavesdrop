@@ -26,4 +26,4 @@ for quick usage in the future.
 Use [os-locale](https://www.npmjs.com/package/os-locale) module to detect language of operating
 system from environment (env) object.
 
-- [ ] create translation test (singular, plural)
+- [x] create translation test (plain, constants, numbers)

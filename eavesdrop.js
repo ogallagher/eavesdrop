@@ -36,6 +36,7 @@ import {
 	test_filesystem,
 	test_parallel,
 	test_request,
+	test_translation,
 	test_api_youtube_search
 } from './tests.js'
 
@@ -109,6 +110,7 @@ cli args:
 			filesystem
 			parallel
 			request
+			translation
 			api_youtube_search
 		]
 
@@ -185,6 +187,12 @@ function tests() {
 			test_promises.push(test_request())
 		}
 		
+		if (all_tests || test_selection.includes('translation')) {
+			//translation
+			log.info('testing translation')
+			test_promises.push(test_translation())
+		}
+		
 		if (all_tests || test_selection.includes('api_youtube_search')) {
 			//api: youtube search
 			log.info('testing api client youtube search')
@@ -241,19 +249,14 @@ function main() {
 				.finally(finish)
 			})
 			.catch(function(failures) {
-				log.error(`${failures.length} tests failed`)
-			
-				try {
-					for (failure of failures) {
-						log.error(failure)
-					}
+				if (failures.length instanceof Array) {
+					log.error(`${failures.length} tests failed: ${failures}`)
 				}
-				catch (e) {
-					log.debug(failures)
+				else {
+					log.error(`one test failed: ${failures}`)
 				}
-				finally {
-					finish()
-				}
+				
+				finish()
 			})
 		}
 		else {

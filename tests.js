@@ -15,16 +15,24 @@ import request from 'request'
 
 // local imports
 
-import { TEST_DIR_PATH } from './consts.js'
+import { 
+	TEST_DIR_PATH,
+	PROGRAM_NAME
+} from './consts.js'
 
 import * as util from './util.js'
 import Logger from './logger.js'
+
+import {
+	translate,
+	translate_n
+} from './io.js'
 
 import ApiClient from './api_client.js'
 
 // constants
 
-const NAME = 'eavesdrop:tests'
+const NAME = PROGRAM_NAME + ':tests'
 export const log = new Logger(NAME)
 
 // methods
@@ -130,6 +138,51 @@ export function test_request() {
 				resolve()
 			}
 		})
+	})
+}
+
+export function test_translation() {
+	return new Promise(function(resolve,reject) {
+		try {
+			let locales = [undefined, 'en','es']
+			
+			log.warning('translation test does not yet self-evaluate')
+			for (let locale of locales) {
+				log.info(`begin translation test for ${locale}`)
+		
+				let phrase_plain = 'let\'s see how a plain phrase translates (without constants or numbers)'
+				log.info(translate(phrase_plain,undefined,locale))
+				
+				let phrase_constants = 'this is a translation test for {{program}}, created by {{author}}'
+				let constants = {
+					program: PROGRAM_NAME,
+					author: 'Owen'
+				}
+				log.info(translate(phrase_constants,constants,locale))
+			
+				let phrases_numbers = [
+					'there is %s fish',
+					'in %s fishbowl',
+					'and %s person observing it'
+				]
+				let numbers = [0,1,2,10]
+				for (let number of numbers) {
+					log.debug('testing numeric phrase translation with ' + number)
+					let translated_numbers = []
+					
+					for (let phrase of phrases_numbers) {
+						translated_numbers.push(translate_n(phrase,number,locale))
+					}
+				
+					log.info(translated_numbers.join(' '))
+				}
+			}
+		
+			resolve()
+		}
+		catch (err) {
+			reject(err)
+		}
 	})
 }
 

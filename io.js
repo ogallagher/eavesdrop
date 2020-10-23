@@ -16,6 +16,8 @@ import os_locale from 'os-locale'
 
 import fs from 'fs'
 
+import MessageFormat from 'messageformat'
+
 // internal imports
 
 import {
@@ -38,6 +40,8 @@ const NAME = PROGRAM_NAME + ':io'
 export const log = new Logger(NAME)
 
 const i18n = new I18n()
+
+const msg_formatter = new MessageFormat('en')
 
 // variables
 
@@ -105,6 +109,49 @@ export function ask(question, commandable=true) {
 	})
 }
 
+export function translate(statement,constants,locale) {
+	if (do_translate) {
+		if (locale == undefined) {
+			locale = i18n.getLocale()
+		}
+		
+		return i18n.__({
+				phrase: statement,
+				locale: locale
+			},
+			constants
+		)
+	}
+	else if (constants) {
+		return msg_formatter.compile(statement,constants)
+	}
+	else {
+		return statement
+	}
+}
+
+export function translate_n(statement,number,locale) {
+	if (do_translate) {
+		if (locale == undefined) {
+			locale = i18n.getLocale()
+		}
+		
+		return i18n.__n({
+				singular: statement,
+				plural: statement,
+				locale: locale
+			},
+			number
+		)
+	}
+	else if (number !== undefined) {
+		return msg_formatter.compile(statement,number)
+	}
+	else {
+		return statement
+	}
+}
+
 export function init_translation(locale) {
 	return new Promise(function(resolve, reject) {
 		//make sure locales directory exists
@@ -152,6 +199,9 @@ export function init_translation(locale) {
 						defaultLocale: locale,
 						directory: LOCALE_DIR,
 					})
+					
+					//required for __n(); see https://stackoverflow.com/a/53104060/10200417
+					i18n.setLocale(locale)
 					
 					do_translate = true
 					

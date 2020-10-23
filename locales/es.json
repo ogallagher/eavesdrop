@@ -1,3 +1,17 @@
 {
-	"\ninput a phrase you'd like to hear.\n": "\nda una frase que escuchar.\n"
+	"\ninput a phrase you'd like to hear.\n": "\nda una frase que escuchar.\n",
+	"this is a translation test for {{program}}, created by {{author}}": "esta es una prueba de traducción de {{program}}, creado por {{author}}",
+	"let's see how a plain phrase translates (without constants or numbers)": "a ver cómo se traduce una frase simple (sin constantes ni números)",
+	"there is %s fish": {
+		"one": "hay %s pez",
+		"other": "hay %s peces"
+	},
+	"in %s fishbowl": {
+		"one": "en %s pecera",
+		"other": "en %s peceras"
+	},
+	"and %s person observing it": {
+		"one": "y %s persona mirándolo",
+		"other": "y %s personas mirándolos"
+	}
 }
