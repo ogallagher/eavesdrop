@@ -14,7 +14,7 @@ Stuff...
 
 - [x] create basic request test method to fetch youtube page
 
-- [ ] try using [youtube api](https://developers.google.com/youtube/v3/docs/)
+- [x] try using [youtube api](https://developers.google.com/youtube/v3/docs/)
 
 [Youtube search sample](https://github.com/googleapis/google-api-nodejs-client/blob/master/samples/youtube/search.js).
 
@@ -27,3 +27,5 @@ Use [os-locale](https://www.npmjs.com/package/os-locale) module to detect langua
 system from environment (env) object.
 
 - [x] create translation test (plain, constants, numbers)
+
+- [x] add [multi-page support](https://developers.google.com/calendar/v3/pagination) to youtube search method

@@ -190,10 +190,43 @@ export function test_api_youtube_search() {
 	return new Promise(function(resolve, reject) {
 		let api_client = new ApiClient('api_key')
 		
-		api_client.youtube_search('something')
-		.then(resolve)
+		// temporarily reduce page size for testing
+		let restore_search_results_max = api_client.search_results_max
+		api_client.search_results_max = 5
+		
+		let num_requests = 3
+		let query = 'something'
+		log.debug(`testing youtube_api search with query=${query} and num_requests=${num_requests}`)
+		
+		let go = true
+		let page_token = undefined
+		let p = api_client.youtube_search(query,page_token)
+		for (let r=0; r<num_requests && go; r++) {
+			p = p.then(function(res) {
+				if (res) {
+					log.info(`${r}: fetched ${res.data.items.length} results for page ${page_token}`)
+					page_token = res.next_page
+				}
+				
+				if (r < num_requests) {
+					return api_client.youtube_search(query,page_token)
+				}
+				else {
+					return Promise.resolve()
+				}
+			})
+			.catch(function(err) {
+				go = false
+				log.error(err)
+				return Promise.reject('test.api_youtube_search')
+			})
+		}
+		
+		p.then(function(res) {
+			api_client.search_results_max = restore_search_results_max
+			resolve()
+		})
 		.catch(function(err) {
-			log.error('api youtube search failed')
 			reject(err)
 		})
 	})

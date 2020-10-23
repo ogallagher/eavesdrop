@@ -58,27 +58,34 @@ export function ApiClient() {
 		version: 'v3',
 		auth: youtube_api_key
 	})
+	
+	this.search_results_max = 25 //0 to 50; 25 is medium
 }
 
-ApiClient.prototype.youtube_search = function(query) {
+ApiClient.prototype.youtube_search = function(query, page_token) {
 	let self = this
 	
 	return new Promise(function(resolve,reject) {
-		log.warning('ApiClient.youtube_search not yet finished')
+		log.debug(`performing ApiClient.youtube_search from page ${page_token}`)
 		
 		self.youtube.search.list({
 			part: 'id,snippet',
-			q: query
+			q: query,
+			type: 'video',
+			videoCaption: 'closedCaption',
+			maxResults: self.search_results_max,
+			pageToken: page_token
 		})
 		.then(function(res) {
 			if (res.status == HTTP_STATUS_OK) {
 				log.debug(res.data)
+				log.debug(res.data.items[0])
 				
-				for (let item of res.data.items) {
-					log.debug(item)
-				}
-				
-				resolve(res.data)
+				resolve({
+					data: res.data,
+					next_page: res.data.nextPageToken,
+					prev_page: res.data.prevPageToken
+				})
 			}
 			else {
 				log.info(res)
