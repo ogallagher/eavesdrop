@@ -40,3 +40,5 @@ export const CLI = readline.createInterface({
 })
 
 export const LOCALE_DIR = './locales/'
+
+export const HTTP_STATUS_OK = 200

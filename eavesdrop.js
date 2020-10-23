@@ -44,6 +44,10 @@ import {
 	CMD_PREFIX
 } from './consts.js'
 
+import {
+	init as init_api_client
+} from './api_client.js'
+
 // constants
 
 const NAME = PROGRAM_NAME
@@ -240,31 +244,41 @@ function main() {
 		log.error('failed to initialize translation module')
 	})
 	.finally(function() {
-		if (do_tests) {
-			tests()
-			.then(function() {
-				log.info('all tests passed')
+		init_api_client()
+		.then(function() {
+			log.debug('initialized api_client module')
+		})
+		.catch(function(e) {
+			log.error('failed to initialize api_client module')
+			log.error(e)
+		})
+		.finally(function() {
+			if (do_tests) {
+				tests()
+				.then(function() {
+					log.info('all tests passed')
 			
+					eavesdrop()
+					.finally(finish)
+				})
+				.catch(function(failures) {
+					if (failures.length instanceof Array) {
+						log.error(`${failures.length} tests failed: ${failures}`)
+					}
+					else {
+						log.error(`one test failed: ${failures}`)
+					}
+				
+					finish()
+				})
+			}
+			else {
+				log.info('running eavesdrop without tests')
+		
 				eavesdrop()
 				.finally(finish)
-			})
-			.catch(function(failures) {
-				if (failures.length instanceof Array) {
-					log.error(`${failures.length} tests failed: ${failures}`)
-				}
-				else {
-					log.error(`one test failed: ${failures}`)
-				}
-				
-				finish()
-			})
-		}
-		else {
-			log.info('running eavesdrop without tests')
-		
-			eavesdrop()
-			.finally(finish)
-		}
+			}
+		})
 	})
 }
 

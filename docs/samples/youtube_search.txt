@@ -1,0 +1,141 @@
+owengallagher@owenlaptop eavesdrop % node eavesdrop.js -T api_youtube_search -l debug
+=== EAVESDROP ===
+
+   parsing cli args +0ms
+   {
+     logging: 'debug',
+     test: false,
+     help: false,
+     tests: 'api_youtube_search',
+     language: ''
+   } +0ms
+   set logging level to debug +3ms
+   testing enabled: api_youtube_search +1ms
+   ./locales/ exists for translation +0ms
+   ./locales/ exists for translation +1ms
+   supported languages:  +0ms
+   default language = en-US +0ms
+   initialized translation module +7ms
+   loading api keys from ./secrets/credentials.json +0ms
+   initialized api_client module +1ms
+   testing api client youtube search +5ms
+   ApiClient.youtube_search not yet finished +0ms
+   {
+     kind: 'youtube#searchListResponse',
+     etag: 'M6EZZzntOkxH9BVT8n2ufMNP4M8',
+     nextPageToken: 'CAUQAA',
+     regionCode: 'US',
+     pageInfo: { totalResults: 1000000, resultsPerPage: 5 },
+     items: [
+       {
+         kind: 'youtube#searchResult',
+         etag: 'JmMyFKMY_U1ODlYPCHGaOWf-nPw',
+         id: [Object],
+         snippet: [Object]
+       },
+       {
+         kind: 'youtube#searchResult',
+         etag: 'ogZLVTKBR0ZNFmiSGYEdWpqy_fk',
+         id: [Object],
+         snippet: [Object]
+       },
+       {
+         kind: 'youtube#searchResult',
+         etag: 'ZioEzgRj_HVp62JmLbMvu4WF5WU',
+         id: [Object],
+         snippet: [Object]
+       },
+       {
+         kind: 'youtube#searchResult',
+         etag: 'w_cwwp1LVsFEjBXhxT7T0gVwckg',
+         id: [Object],
+         snippet: [Object]
+       },
+       {
+         kind: 'youtube#searchResult',
+         etag: 'feuOKQb1oxc1SoF1uvtq6poo4vM',
+         id: [Object],
+         snippet: [Object]
+       }
+     ]
+   } +0ms
+   {
+     kind: 'youtube#searchResult',
+     etag: 'JmMyFKMY_U1ODlYPCHGaOWf-nPw',
+     id: { kind: 'youtube#video', videoId: 'UelDrZ1aFeY' },
+     snippet: {
+       publishedAt: '2017-12-15T16:14:30Z',
+       channelId: 'UC4dqLAF7yT-_DqeYisQ001w',
+       title: 'The Beatles - Something',
+       description: 'Official site: http://www.thebeatles.com Facebook: https://www.facebook.com/thebeatles/ Instagram: https://www.instagram.com/thebeatles Twitter: ...',
+       thumbnails: { default: [Object], medium: [Object], high: [Object] },
+       channelTitle: 'TheBeatlesVEVO',
+       liveBroadcastContent: 'none',
+       publishTime: '2017-12-15T16:14:30Z'
+     }
+   } +2ms
+   {
+     kind: 'youtube#searchResult',
+     etag: 'ogZLVTKBR0ZNFmiSGYEdWpqy_fk',
+     id: { kind: 'youtube#video', videoId: 'Xl-BNTeJXjw' },
+     snippet: {
+       publishedAt: '2020-02-25T05:00:04Z',
+       channelId: 'UCS1YGiJZUVUTMqYADYG9frw',
+       title: 'Paul McCartney, Eric Clapton - Something (Live)',
+       description: 'Music video by Paul McCartney, Eric Clapton performing Something (Live). © 2017 Oops Publishing, Limited, Under exclusive license to Craft Recordings, ...',
+       thumbnails: { default: [Object], medium: [Object], high: [Object] },
+       channelTitle: 'GeorgeHarrisonVEVO',
+       liveBroadcastContent: 'none',
+       publishTime: '2020-02-25T05:00:04Z'
+     }
+   } +0ms
+   {
+     kind: 'youtube#searchResult',
+     etag: 'ZioEzgRj_HVp62JmLbMvu4WF5WU',
+     id: { kind: 'youtube#video', videoId: 'MZ3Vh8jZFdE' },
+     snippet: {
+       publishedAt: '2019-08-08T13:00:07Z',
+       channelId: 'UC4dqLAF7yT-_DqeYisQ001w',
+       title: 'The Beatles - Something (2019 Mix / Audio)',
+       description: 'Music video by The Beatles performing Something (2019 Mix / Audio). © 2019 Calderstone Productions Limited (a division of Universal Music Group) ...',
+       thumbnails: { default: [Object], medium: [Object], high: [Object] },
+       channelTitle: 'TheBeatlesVEVO',
+       liveBroadcastContent: 'none',
+       publishTime: '2019-08-08T13:00:07Z'
+     }
+   } +1ms
+   {
+     kind: 'youtube#searchResult',
+     etag: 'w_cwwp1LVsFEjBXhxT7T0gVwckg',
+     id: { kind: 'youtube#video', videoId: 'zVO5xTAbxm8' },
+     snippet: {
+       publishedAt: '2014-01-16T09:55:53Z',
+       channelId: 'UCweOkPb1wVVH0Q0Tlj4a5Pw',
+       title: '[MV] GIRL&#39;S DAY(걸스데이) _ Something (Dance ver.)',
+       description: "[MV] GIRL'S DAY(걸스데이) _ Something (Dance ver.) LOEN MUSIC changes the name to '1theK[wʌnðəkeɪ]' to be a global K-POP hub! 로엔뮤직이 새 이름 ...",
+       thumbnails: { default: [Object], medium: [Object], high: [Object] },
+       channelTitle: '1theK (원더케이)',
+       liveBroadcastContent: 'none',
+       publishTime: '2014-01-16T09:55:53Z'
+     }
+   } +0ms
+   {
+     kind: 'youtube#searchResult',
+     etag: 'feuOKQb1oxc1SoF1uvtq6poo4vM',
+     id: { kind: 'youtube#video', videoId: 'RR2dlAnP0-I' },
+     snippet: {
+       publishedAt: '2020-10-21T13:54:48Z',
+       channelId: 'UCLFXk9J3O-hhOk0msOjKYdQ',
+       title: 'Something About The Photon Aerospace Control Engineer (Loud Sound and Light Sensitivity Warning)👨‍🚀👻',
+       description: "In the far reaches of space, mysterious abandoned solar mining vessels are littered throughout the Labyrinth Cluster. Let's follow the journey into one of these ...",
+       thumbnails: { default: [Object], medium: [Object], high: [Object] },
+       channelTitle: 'TerminalMontage',
+       liveBroadcastContent: 'none',
+       publishTime: '2020-10-21T13:54:48Z'
+     }
+   } +3ms
+   all tests passed +403ms
+
+input a phrase you'd like to hear.
+$q
+owengallagher@owenlaptop eavesdrop % 
