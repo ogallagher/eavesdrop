@@ -25,7 +25,7 @@ import {
 	CMD_PREFIX,
 	CMDS,
 	CLI,
-	LOCALE_DIR
+	LOCALE_DIR_PATH
 } from './consts.js'
 
 import Logger from './logger.js'

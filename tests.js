@@ -30,6 +30,13 @@ import {
 
 import ApiClient from './api_client.js'
 
+import {
+	clear_videos as results_clear_videos,
+	add_videos as results_add_videos,
+	write as results_write,
+	show as results_show,
+} from './results.js'
+
 // constants
 
 const NAME = PROGRAM_NAME + ':tests'
@@ -177,7 +184,7 @@ export function test_translation() {
 					log.info(translated_numbers.join(' '))
 				}
 			}
-		
+			
 			resolve()
 		}
 		catch (err) {
@@ -227,6 +234,46 @@ export function test_api_youtube_search() {
 			resolve()
 		})
 		.catch(function(err) {
+			reject(err)
+		})
+	})
+}
+
+export function test_results_show() {
+	return new Promise(function(resolve,reject) {
+		results_show()
+		.then(resolve)
+		.catch(function(err) {
+			log.error(err)
+			reject(err)
+		})
+	})
+}
+
+export function test_results() {
+	return new Promise(function(resolve,reject) {
+		// show before
+		results_show()
+		
+		// clear
+		.then(results_clear_videos())
+		
+		// add videos
+		.then(results_add_videos())
+		
+		// add video
+		.then(results_add_videos())
+		
+		// write
+		.then(results_write())
+		
+		// show
+		.then(results_show())
+		
+		.then(resolve)
+		
+		.catch(function(err) {
+			log.error(err)
 			reject(err)
 		})
 	})

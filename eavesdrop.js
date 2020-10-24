@@ -20,6 +20,7 @@ import {
 
 import {
 	init_loggers,
+	init_config,
 	finish as util_finish,
 	eavesdrop_commands_help
 } from './util.js'
@@ -37,7 +38,9 @@ import {
 	test_parallel,
 	test_request,
 	test_translation,
-	test_api_youtube_search
+	test_api_youtube_search,
+	test_results_show,
+	test_results
 } from './tests.js'
 
 import {
@@ -45,7 +48,8 @@ import {
 } from './consts.js'
 
 import {
-	init as init_api_client
+	init as init_api_client,
+	config as config_api_client
 } from './api_client.js'
 
 // constants
@@ -115,7 +119,9 @@ cli args:
 			parallel
 			request
 			translation
-			api_youtube_search
+			api-youtube-search
+			test-results-show
+			test-results
 		]
 
 	(-h | --help)
@@ -162,6 +168,17 @@ function parse_cli_args() {
 	}
 }
 
+function config() {
+	// init from config file
+	init_config()
+	.then(function(config) {
+		config_api_client(config)
+	})
+	.catch(function() {
+		log.warning('no configuration file found')
+	})
+}
+
 function tests() {
 	return new Promise(function(resolve,reject) {
 		let test_promises = [] //array of promises
@@ -197,10 +214,22 @@ function tests() {
 			test_promises.push(test_translation())
 		}
 		
-		if (all_tests || test_selection.includes('api_youtube_search')) {
+		if (all_tests || test_selection.includes('api-youtube-search')) {
 			//api: youtube search
 			log.info('testing api client youtube search')
 			test_promises.push(test_api_youtube_search())
+		}
+		
+		if (all_tests || test_selection.includes('test-results-show')) {
+			//results: show
+			log.info('testing results preview')
+			test_promises.push(test_results_show())
+		}
+		
+		if (all_tests || test_selection.includes('test-results')) {
+			//results: show
+			log.info('testing results clear, update, write, and show')
+			test_promises.push(test_results())
 		}
 		
 		Promise.all(test_promises)
@@ -235,6 +264,8 @@ function main() {
 	console.log('=== EAVESDROP ===\n')
 	
 	parse_cli_args()
+	
+	config()
 	
 	init_translation(locale)
 	.then(function() {

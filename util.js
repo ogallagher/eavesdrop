@@ -7,10 +7,16 @@ Owen Gallagher
 
 // external imports
 
+import fs from 'fs'
+
+// local imports
+
 import {
 	PROGRAM_NAME,
+	CONFIG_PATH,
 	CLI,
-	CMD_PREFIX
+	CMD_PREFIX,
+	RESOURCES_DIR_PATH
 } from './consts.js'
 
 import Logger from './logger.js'
@@ -28,22 +34,66 @@ import {
 } from './io.js'
 
 import {
+	log as results_log
+} from './results.js'
+
+import {
 	log as eavesdrop_log
 } from './eavesdrop.js'
-
-// local imports
 
 // constants
 
 const NAME = PROGRAM_NAME + ':util'
 export const log = new Logger(NAME)
 
+//methods
+
 export function init_loggers(logging_level) {
 	log.enable(logging_level)
 	test_log.enable(logging_level)
 	api_log.enable(logging_level)
 	io_log.enable(logging_level)
+	results_log.enable(logging_level)
 	eavesdrop_log.enable(logging_level)
+}
+
+export function init_config() {
+	return new Promise(function(resolve,reject) {
+		//make sure resources/config exists
+		fs.mkdir(RESOURCES_DIR_PATH, function(err, data) {
+			let dir_exists = true
+		
+			if (err) {
+				if (err.code == 'EEXIST') {
+					log.debug('resources dir exists')
+				}
+				else {
+					dir_exists = false
+					log.error('failed to create resources dir at ' + RESOURCES_DIR_PATH)
+				}
+			}
+			else {
+				log.info('created resources dir at ' + RESOURCES_DIR_PATH)
+			}
+		
+			if (dir_exists) {
+				fs.readFile(CONFIG_PATH, function(err, data) {
+					if (err) {
+						log.debug('failed to load config file')
+						log.debug(err)
+						reject()
+					}
+					else {
+						log.debug('loaded config file successfully')
+						resolve(JSON.parse(data))
+					}
+				})
+			}
+			else {
+				reject()
+			}
+		})
+	})
 }
 
 export function finish() {
@@ -67,4 +117,16 @@ export function do_command(cmd) {
 		finish()
 		process.exit()
 	}
+}
+
+export function dummy_res() {
+	log.debug('call dummy resolve')
+}
+
+export function dummy_rej() {
+	log.debug('call dummy reject')
+}
+
+export function dummy_fin() {
+	log.debug('call dummy finally')
 }
