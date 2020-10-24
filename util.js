@@ -38,7 +38,8 @@ import {
 } from './results.js'
 
 import {
-	log as eavesdrop_log
+	log as eavesdrop_log,
+	finish as eavesdrop_finish
 } from './eavesdrop.js'
 
 // constants
@@ -57,7 +58,7 @@ export function init_loggers(logging_level) {
 	eavesdrop_log.enable(logging_level)
 }
 
-export function init_config() {
+export function get_config() {
 	return new Promise(function(resolve,reject) {
 		//make sure resources/config exists
 		fs.mkdir(RESOURCES_DIR_PATH, function(err, data) {
@@ -96,6 +97,20 @@ export function init_config() {
 	})
 }
 
+export function write_config(config) {
+	return new Promise(function(resolve,reject) {
+		fs.writeFile(CONFIG_PATH, JSON.stringify(config,null,'\t'), function(err) {
+			if (err) {
+				log.error(err)
+				reject('util.write_config')
+			}
+			else {
+				resolve()
+			}
+		})
+	})
+}
+
 export function finish() {
 	CLI.close()
 }
@@ -114,8 +129,10 @@ export function do_command(cmd) {
 		console.log(eavesdrop_commands_help())
 	}
 	else if (cmd == 'q' || cmd == 'quit') {
-		finish()
-		process.exit()
+		eavesdrop_finish()
+		.then(() => {
+			process.exit()
+		})
 	}
 }
 

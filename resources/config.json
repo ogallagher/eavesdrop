@@ -1,5 +1,23 @@
 {
 	"api_usage": {
 		"youtube": 0
+	},
+	"constants": {
+		"PROGRAM_NAME": "eavesdropper",
+		"TEST_DIR_PATH": "./dir/",
+		"TEST_FILE_NAME": "file.txt",
+		"RESOURCES_DIR_PATH": "./resources/",
+		"CONFIG_NAME": "config.json",
+		"SECRETS_PATH": "./secrets/",
+		"CREDENTIALS_NAME": "credentials.json",
+		"LOCALE_DIR_PATH": "./locales/",
+		"RESULTS_DIR_PATH": "./results/",
+		"VIDEO_PLAYER_NAME": "video_player.html",
+		"CMD_PREFIX": "$",
+		"VIDEO_HEIGHT": 200,
+		"API_QUOTA_YOUTUBE": 10000,
+		"APIU_YTB_SEARCH": 100,
+		"APIU_YTB_CAPTIONS_LIST": 50,
+		"APIU_YTB_CAPTIONS_DOWNLOAD": 200
 	}
 }

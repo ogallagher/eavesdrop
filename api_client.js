@@ -19,10 +19,16 @@ import {
 	API_QUOTA_YOUTUBE,
 	APIU_YTB_SEARCH,
 	APIU_YTB_CAPTIONS_LIST,
-	APIU_YTB_CAPTIONS_DOWNLOAD
+	APIU_YTB_CAPTIONS_DOWNLOAD,
+	CONFIG_PATH
 } from './consts.js'
 
-import { Logger } from './logger.js'
+import Logger from './logger.js'
+
+import {
+	get_config,
+	write_config
+} from './util.js'
 
 // constants
 
@@ -43,7 +49,8 @@ export function init() {
 		fs.readFile(CREDENTIALS_PATH, function(err, json) {
 			if (err) {
 				log.error('failed to load api keys')
-				reject(err)
+				log.error(err)
+				reject('api_client.init.credentials')
 			}
 			else {
 				let credentials = JSON.parse(json)
@@ -66,6 +73,45 @@ export function config(config) {
 	youtube_api_usage = config.api_usage.youtube
 }
 
+export function finish(config) {
+	return new Promise(function(resolve,reject) {
+		let do_write_config = false
+		let p
+		if (config == undefined) {
+			do_write_config = true
+			p = get_config()
+		}
+		else {
+			p = Promise.resolve(config)
+		}
+		
+		p.then(function(config) {
+			//write youtube api usage to config object
+			config.api_usage.youtube = youtube_api_usage
+			log.info(`youtube api usage = ${youtube_api_usage}`)
+			
+			if (do_write_config) {
+				//write config object to file
+				write_config(config)
+				.then(resolve)
+				.catch(function(err) {
+					log.error(err)
+					log.error('failed to write to config file')
+					reject('api_client.finish.config.write')
+				})
+			}
+			else {
+				resolve()
+			}
+		})
+		.catch(function(err) {
+			log.error(err)
+			log.error('failed to update config file')
+			reject('api_client.finish.config')
+		})
+	})
+}
+
 // ApiClient class
 
 export function ApiClient() {
@@ -85,7 +131,7 @@ ApiClient.prototype.youtube_search = function(query, page_token) {
 		
 		youtube_api_usage += APIU_YTB_SEARCH
 		self.youtube.search.list({
-			part: 'id,snippet,player',
+			part: 'id,snippet',
 			q: query,
 			type: 'video',
 			videoCaption: 'closedCaption',
@@ -110,6 +156,19 @@ ApiClient.prototype.youtube_search = function(query, page_token) {
 		.catch(function(err) {
 			log.error(err)
 			reject('api_client.youtube_search')
+		})
+	})
+}
+
+ApiClient.prototype.youtube_videos_list = function(video_ids) {
+	let self = this
+	
+	return new Promise(function(resolve,reject) {
+		log.debug(`performing ApiClient.youtube_videos_list for ${video_ids}`)
+		
+		youtube_api_usage += APIU_YTB_VIDEOS_LIST
+		self.youtube.videos.list({
+			part: 'id,snippet,player,contentDetails'
 		})
 	})
 }

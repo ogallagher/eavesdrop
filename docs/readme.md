@@ -31,3 +31,5 @@ system from environment (env) object.
 - [x] add [multi-page support](https://developers.google.com/calendar/v3/pagination) to youtube search method
 
 - [x] add simple html template page for showing video results of a search
+
+- [x] create results tests to add videos to the video player

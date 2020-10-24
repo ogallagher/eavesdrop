@@ -15,13 +15,14 @@ import cli_args from 'command-line-args'
 
 import { 
 	PROGRAM_NAME,
-	LOG_LEVEL 
+	LOG_LEVEL,
+	config as config_consts 
 } from './consts.js'
 
 import {
 	init_loggers,
-	init_config,
-	finish as util_finish,
+	get_config,
+	finish as finish_util,
 	eavesdrop_commands_help
 } from './util.js'
 
@@ -50,7 +51,8 @@ import {
 
 import {
 	init as init_api_client,
-	config as config_api_client
+	config as config_api_client,
+	finish as finish_api_client
 } from './api_client.js'
 
 // constants
@@ -171,13 +173,20 @@ function parse_cli_args() {
 }
 
 function config() {
-	// init from config file
-	init_config()
-	.then(function(config) {
-		config_api_client(config)
-	})
-	.catch(function() {
-		log.warning('no configuration file found')
+	return new Promise(function(resolve,reject) {
+		// init from config file
+		get_config()
+		.then(function(config) {
+			config_consts(config)
+		
+			config_api_client(config)
+			
+			resolve()
+		})
+		.catch(function() {
+			log.warning('no configuration file found')
+			reject('eavesdrop.config.file')
+		})
 	})
 }
 
@@ -280,60 +289,91 @@ function eavesdrop() {
 function main() {
 	console.log('=== EAVESDROP ===\n')
 	
-	parse_cli_args()
-	
-	config()
-	
-	init_translation(locale)
-	.then(function() {
-		log.debug('initialized translation module')
-	})
-	.catch(function(e) {
-		log.error(e)
-		log.error('failed to initialize translation module')
-	})
-	.finally(function() {
-		init_api_client()
+	try {
+		parse_cli_args()
+		
+		config()
+		.then(() => {
+			return init_translation(locale)
+		})
 		.then(function() {
-			log.debug('initialized api_client module')
+			log.debug('initialized translation module')
 		})
 		.catch(function(e) {
-			log.error('failed to initialize api_client module')
 			log.error(e)
-		})
-		.finally(function() {
-			if (do_tests) {
-				tests()
-				.then(function() {
-					log.info('all tests passed')
-			
-					eavesdrop()
-					.finally(finish)
-				})
-				.catch(function(failures) {
-					if (failures.length instanceof Array) {
-						log.error(`${failures.length} tests failed: ${failures}`)
-					}
-					else {
-						log.error(`one test failed: ${failures}`)
-					}
-				
-					finish()
-				})
+		
+			if (e instanceof String) {
+				if (e.startsWith('eavesdrop.config')) {
+					log.error('failed to read from config file')
+				}
+				else if (e.startsWith('io')) {
+					log.error('failed to initialize translation module')
+				}
+				else {
+					log.error('unknown error')
+				}
 			}
 			else {
-				log.info('running eavesdrop without tests')
-		
-				eavesdrop()
-				.finally(finish)
+				log.error('unknown error')
 			}
 		})
-	})
+		.finally(function() {
+			init_api_client()
+			.then(function() {
+				log.debug('initialized api_client module')
+			})
+			.catch(function(e) {
+				log.error('failed to initialize api_client module')
+				log.error(e)
+			})
+			.finally(function() {
+				if (do_tests) {
+					tests()
+					.then(function() {
+						log.info('all tests passed')
+			
+						eavesdrop()
+						.finally(finish)
+					})
+					.catch(function(failures) {
+						if (failures.length instanceof Array) {
+							log.error(`${failures.length} tests failed: ${failures}`)
+						}
+						else {
+							log.error(`one test failed: ${failures}`)
+						}
+				
+						finish()
+					})
+				}
+				else {
+					log.info('running eavesdrop without tests')
+		
+					eavesdrop()
+					.finally(finish)
+				}
+			})
+		})
+	}
+	catch (e) {
+		log.error(e)
+		log.error('failed to parse cli args')
+	}
 }
 
-function finish() {
-	util_finish()
-	console.log('\n=== DONE ===')
+export function finish() {
+	return new Promise(function(resolve) {
+		finish_api_client()
+		.catch(function(err) {
+			log.error(err)
+			log.error('api_client module failed cleanup')
+		})
+		.finally(() => {
+			finish_util()
+			console.log('\n=== DONE ===')
+			resolve()
+		})
+	})
 }
 
 // main / exports

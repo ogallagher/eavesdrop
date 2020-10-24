@@ -35,6 +35,7 @@ export const log = new Logger(NAME)
 
 // variables
 
+// video_player_html can be set to null at any time to free memory if needed
 let video_player_html = null
 
 // methods
