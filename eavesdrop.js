@@ -40,7 +40,8 @@ import {
 	test_translation,
 	test_api_youtube_search,
 	test_results_show,
-	test_results
+	test_results,
+	test_promise_assign_outer
 } from './tests.js'
 
 import {
@@ -120,8 +121,9 @@ cli args:
 			request
 			translation
 			api-youtube-search
-			test-results-show
-			test-results
+			results-show
+			results
+			promise-assign-outer
 		]
 
 	(-h | --help)
@@ -220,16 +222,31 @@ function tests() {
 			test_promises.push(test_api_youtube_search())
 		}
 		
-		if (all_tests || test_selection.includes('test-results-show')) {
+		if (all_tests || test_selection.includes('results-show')) {
 			//results: show
 			log.info('testing results preview')
 			test_promises.push(test_results_show())
 		}
 		
-		if (all_tests || test_selection.includes('test-results')) {
+		if (all_tests || test_selection.includes('results')) {
 			//results: show
 			log.info('testing results clear, update, write, and show')
 			test_promises.push(test_results())
+		}
+		
+		if (all_tests || test_selection.includes('promise-assign-outer')) {
+			// promise assign to variable in outer scope
+			log.info('testing assignment to variable in outer scope from within promise')
+			
+			let iterations = 3
+			let p = Promise.resolve()
+			for (let i=0; i<iterations; i++) {
+				p = p.then(
+					test_promise_assign_outer()
+				)
+			}
+			
+			test_promises.push(p)
 		}
 		
 		Promise.all(test_promises)
@@ -272,6 +289,7 @@ function main() {
 		log.debug('initialized translation module')
 	})
 	.catch(function(e) {
+		log.error(e)
 		log.error('failed to initialize translation module')
 	})
 	.finally(function() {

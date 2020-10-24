@@ -130,3 +130,8 @@ export function dummy_rej() {
 export function dummy_fin() {
 	log.debug('call dummy finally')
 }
+
+export function dummy_call(callback) {
+	log.debug('call dummy, then callback')
+	callback()
+}

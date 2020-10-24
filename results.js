@@ -10,7 +10,9 @@ Owen Gallagher
 import fs from 'fs'
 import path from 'path'
 
-import html_parse from 'node-html-parser'
+import { 
+	parse as html_parse 
+} from 'node-html-parser'
 
 import {
 	exec as process_exec
@@ -33,7 +35,7 @@ export const log = new Logger(NAME)
 
 // variables
 
-let html = null
+let video_player_html = null
 
 // methods
 
@@ -46,8 +48,8 @@ function load_video_player() {
 				reject('results.load.file')
 			}
 			else {
+				video_player_html = html_parse(data)
 				log.debug('video player file loaded')
-				html = html_parse(data)
 				resolve()
 			}
 		})
@@ -78,12 +80,12 @@ export function show() {
 }
 
 export function write() {
-	return Promise(function(resolve,reject) {
-		if (html != null) {
-			fs.writeFile(VIDEO_PLAYER_PATH, html.toString(), function(err) {
+	return new Promise(function(resolve,reject) {
+		if (video_player_html != null) {
+			fs.writeFile(VIDEO_PLAYER_PATH, video_player_html.toString(), function(err) {
 				if (err) {
 					log.error(err)
-					reject('results.write')
+					reject('results.write.write')
 				}
 				else {
 					log.debug('wrote results to video player')
@@ -92,27 +94,15 @@ export function write() {
 			})
 		}
 		else {
-			reject('results.null')
+			reject('results.write.null')
 		}
 	})
 }
 
 export function clear_videos() {
-	return new Promise(function(resolve,reject) {
-		if (html != null) {
-			html.querySelector('#videos').set_content('')
-		}
-		
-		resolve()
-	})
-}
-
-export function add_videos(videos) {
-	return new Promise(function(resolve,reject) {
-		log.debug(`adding ${videos.length} videos to ${VIDEO_PLAYER_PATH}`)
-		
-		let p
-		if (html == null) {
+	return new Promise(function(resolve) {
+		let p = null
+		if (video_player_html == null) {
 			p = load_video_player()
 		}
 		else {
@@ -120,10 +110,38 @@ export function add_videos(videos) {
 		}
 		
 		p.then(function() {
-			const container = html.querySelector('#videos')
+			video_player_html.querySelector('#videos').set_content('')
+			resolve()
+		})
+	})
+}
+
+export function add_videos(videos) {
+	return new Promise(function(resolve,reject) {
+		let multiple = false
+		let count = 1
+		
+		if (videos instanceof Array) {
+			multiple = true
+			count = videos.length
+		}
+		
+		log.debug(`adding ${count} videos to ${VIDEO_PLAYER_PATH}`)
+		
+		let p = null
+		
+		if (video_player_html == null) {
+			p = load_video_player()
+		}
+		else {
+			p = Promise.resolve()
+		}
+		
+		p.then(function() {
+			const container = video_player_html.querySelector('#videos')
 			
-			if (videos instanceof Array) {
-				for (video of videos) {
+			if (multiple) {
+				for (let video of videos) {
 					container.appendChild(html_parse(video))
 				}
 			}

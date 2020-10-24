@@ -155,21 +155,21 @@ export function translate_n(statement,number,locale) {
 export function init_translation(locale) {
 	return new Promise(function(resolve, reject) {
 		//make sure locales directory exists
-		fs.mkdir(LOCALE_DIR, function(err) {
+		fs.mkdir(LOCALE_DIR_PATH, function(err) {
 			let go = true
 			
 			if (err) {
 				if (err.code == 'EEXIST') {
-					log.debug(`${LOCALE_DIR} exists for translation`)
+					log.debug(`${LOCALE_DIR_PATH} exists for translation`)
 				}
 				else {
 					go = false
-					log.error(`failed to create ${LOCALE_DIR} for translation`)
+					log.error(`failed to create ${LOCALE_DIR_PATH} for translation`)
 					reject('io.locale.dir')
 				}
 			}
 			else {
-				log.info(`created ${LOCALE_DIR} for translation`)
+				log.info(`created ${LOCALE_DIR_PATH} for translation`)
 			}
 			
 			if (go) {
@@ -197,7 +197,7 @@ export function init_translation(locale) {
 							'es-*': 'es'
 						},
 						defaultLocale: locale,
-						directory: LOCALE_DIR,
+						directory: LOCALE_DIR_PATH,
 					})
 					
 					//required for __n(); see https://stackoverflow.com/a/53104060/10200417

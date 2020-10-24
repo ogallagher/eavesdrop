@@ -20,7 +20,10 @@ import {
 	PROGRAM_NAME
 } from './consts.js'
 
-import * as util from './util.js'
+import {
+	dummy_call
+} from './util.js'
+
 import Logger from './logger.js'
 
 import {
@@ -41,6 +44,10 @@ import {
 
 const NAME = PROGRAM_NAME + ':tests'
 export const log = new Logger(NAME)
+
+// variables
+
+let test_variable = null
 
 // methods
 
@@ -256,25 +263,84 @@ export function test_results() {
 		results_show()
 		
 		// clear
-		.then(results_clear_videos())
+		.then(results_clear_videos)
 		
 		// add videos
-		.then(results_add_videos())
+		.then(() => {
+			return results_add_videos([
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+			])
+		})
 		
 		// add video
-		.then(results_add_videos())
+		.then(() => {
+			return results_add_videos(
+				'<iframe height="200" src="https://www.youtube.com/embed/JMfUdb9QUpM?start=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+			)
+		})
 		
-		// write
-		.then(results_write())
+		// // write
+		.then(results_write)
+		//
+		// // show
+		.then(results_show)
 		
-		// show
-		.then(results_show())
-		
+		// success
 		.then(resolve)
 		
+		// failure
 		.catch(function(err) {
 			log.error(err)
 			reject(err)
+		})
+	})
+}
+
+export function test_promise_assign_outer(do_resolve=true) {
+	return new Promise(function(resolve,reject) {
+		dummy_call(function() {
+			log.debug(`test_promise_assign_outer: old variable = ${JSON.stringify(test_variable)}`)
+			if (test_variable == null) {
+				test_variable = {
+					value: 1
+				}
+			}
+			else if (test_variable.value !== undefined) {
+				test_variable.value += 1
+			}
+			else {
+				test_variable.value = 1
+			}
+			log.debug(`test_promise_assign_outer: new variable = ${JSON.stringify(test_variable)}`)
+		
+			if (do_resolve) {
+				resolve()
+			}
+			else {
+				reject('test.promise_assign_outer')
+			}
 		})
 	})
 }
