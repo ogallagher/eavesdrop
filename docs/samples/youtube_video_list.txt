@@ -1,0 +1,324 @@
+owengallagher@owenlaptop eavesdrop % node eavesdrop.js --tests api-youtube-videos -l debug
+=== EAVESDROP ===
+
+parsing cli args +0ms
+{
+ logging: 'debug',
+ test: false,
+ help: false,
+ tests: 'api-youtube-videos',
+ language: ''
+} +0ms
+set logging level to debug +4ms
+testing enabled: api-youtube-videos +0ms
+resources dir exists +0ms
+loaded config file successfully +1ms
+set 16 constants from config file at ./resources/config.json
+./locales/ exists for translation +0ms
+./locales/ exists for translation +1ms
+supported languages:  +0ms
+default language = en-US +0ms
+initialized translation module +14ms
+loading api keys from ./secrets/credentials.json +0ms
+initialized api_client module +0ms
+testing api client youtube videos list +12ms
+testing youtube_api videos list with ids = UelDrZ1aFeY,Xl-BNTeJXjw,MZ3Vh8jZFdE,zVO5xTAbxm8 +0ms
+performing ApiClient.youtube_videos_list for UelDrZ1aFeY,Xl-BNTeJXjw,MZ3Vh8jZFdE,zVO5xTAbxm8 +2ms
+>    fetched 4 videos +0ms
+{
+ kind: 'youtube#video',
+ etag: '75IekIdoV3jb01VJcUceZ4A7b7I',
+ id: 'UelDrZ1aFeY',
+ snippet: {
+   publishedAt: '2017-12-15T16:14:30Z',
+   channelId: 'UC4dqLAF7yT-_DqeYisQ001w',
+   title: 'The Beatles - Something',
+   description: 'Official site: http://www.thebeatles.com\n' +
+     'Facebook: https://www.facebook.com/thebeatles/\n' +
+     'Instagram: https://www.instagram.com/thebeatles\n' +
+     'Twitter: https://twitter.com/thebeatles\n' +
+     '\n' +
+     'Music video by The Beatles performing Something. (C) 2015 Calderstone Productions Limited (a division of Universal Music Group) / Apple Films Ltd.',
+   thumbnails: {
+     default: [Object],
+     medium: [Object],
+     high: [Object],
+     standard: [Object],
+     maxres: [Object]
+   },
+   channelTitle: 'TheBeatlesVEVO',
+   tags: [
+     'something the beatles video',
+     'something the beatles music video',
+     'something the beatles',
+     'something the beatles abbey road',
+     'something the beatles official music video',
+     'something the beatles official video',
+     'something the beatles original version',
+     'something the beatles original video',
+     'something the beatles official',
+     'something the beatles remastered',
+     'the beatles something vevo',
+     'the beatles something',
+     'the beatles something official video',
+     'the'
+   ],
+   categoryId: '10',
+   liveBroadcastContent: 'none',
+   localized: {
+     title: 'The Beatles - Something',
+     description: 'Official site: http://www.thebeatles.com\n' +
+       'Facebook: https://www.facebook.com/thebeatles/\n' +
+       'Instagram: https://www.instagram.com/thebeatles\n' +
+       'Twitter: https://twitter.com/thebeatles\n' +
+       '\n' +
+       'Music video by The Beatles performing Something. (C) 2015 Calderstone Productions Limited (a division of Universal Music Group) / Apple Films Ltd.'
+   },
+   defaultAudioLanguage: 'en-US'
+ },
+ contentDetails: {
+   duration: 'PT3M8S',
+   dimension: '2d',
+   definition: 'hd',
+   caption: 'false',
+   licensedContent: true,
+   regionRestriction: { allowed: [Array] },
+   contentRating: {},
+   projection: 'rectangular'
+ },
+ player: {
+   embedHtml: '<iframe width="480" height="270" src="//www.youtube.com/embed/UelDrZ1aFeY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+ }
+} +53s
+{
+ kind: 'youtube#video',
+ etag: 'om3AACSfYvyCBSlht7hyToYakkc',
+ id: 'Xl-BNTeJXjw',
+ snippet: {
+   publishedAt: '2020-02-25T05:00:04Z',
+   channelId: 'UCS1YGiJZUVUTMqYADYG9frw',
+   title: 'Paul McCartney, Eric Clapton - Something (Live)',
+   description: 'Music video by Paul McCartney, Eric Clapton performing Something (Live). © 2017 Oops Publishing, Limited, Under exclusive license to Craft Recordings, a division of Concord Music Group, Inc.\n' +
+     '\n' +
+     'http://vevo.ly/4QUbrL',
+   thumbnails: {
+     default: [Object],
+     medium: [Object],
+     high: [Object],
+     standard: [Object],
+     maxres: [Object]
+   },
+   channelTitle: 'GeorgeHarrisonVEVO',
+   tags: [
+     'Paul',      'McCartney',
+     'Eric',      'Clapton',
+     'Something', '(Live)',
+     'Craft',     'Recordings',
+     'Rock'
+   ],
+   categoryId: '10',
+   liveBroadcastContent: 'none',
+   localized: {
+     title: 'Paul McCartney, Eric Clapton - Something (Live)',
+     description: 'Music video by Paul McCartney, Eric Clapton performing Something (Live). © 2017 Oops Publishing, Limited, Under exclusive license to Craft Recordings, a division of Concord Music Group, Inc.\n' +
+       '\n' +
+       'http://vevo.ly/4QUbrL'
+   }
+ },
+ contentDetails: {
+   duration: 'PT4M27S',
+   dimension: '2d',
+   definition: 'hd',
+   caption: 'true',
+   licensedContent: true,
+   regionRestriction: { allowed: [Array] },
+   contentRating: {},
+   projection: 'rectangular'
+ },
+ player: {
+   embedHtml: '<iframe width="480" height="270" src="//www.youtube.com/embed/Xl-BNTeJXjw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+ }
+} +2ms
+{
+ kind: 'youtube#video',
+ etag: '8Dqddc0JvVrg76kR8LehbqM298E',
+ id: 'MZ3Vh8jZFdE',
+ snippet: {
+   publishedAt: '2019-08-08T13:00:07Z',
+   channelId: 'UC4dqLAF7yT-_DqeYisQ001w',
+   title: 'The Beatles - Something (2019 Mix / Audio)',
+   description: 'Music video by The Beatles performing Something (2019 Mix / Audio). © 2019 Calderstone Productions Limited (a division of Universal Music Group)\n' +
+     '\n' +
+     'http://vevo.ly/Zuax48',
+   thumbnails: {
+     default: [Object],
+     medium: [Object],
+     high: [Object],
+     standard: [Object],
+     maxres: [Object]
+   },
+   channelTitle: 'TheBeatlesVEVO',
+   tags: [
+     'the beatles',
+     'Beatles',
+     'Something',
+     'UMC',
+     'Universal Music Catalogue',
+     'Rock',
+     'beatles something',
+     'something beatles',
+     'the beatles something',
+     'something the beatles',
+     'george harrison',
+     'george harrison something',
+     'something george harrison',
+     'something 2019 mix',
+     'beatles something 2019',
+     'something abbey road 2019',
+     'abbey road',
+     'something abbey road',
+     'the beatles abbey road 2019',
+     'the beatles something 2019 mix',
+     'the beatles something official audio',
+     'abbey road 2019'
+   ],
+   categoryId: '10',
+   liveBroadcastContent: 'none',
+   localized: {
+     title: 'The Beatles - Something (2019 Mix / Audio)',
+     description: 'Music video by The Beatles performing Something (2019 Mix / Audio). © 2019 Calderstone Productions Limited (a division of Universal Music Group)\n' +
+       '\n' +
+       'http://vevo.ly/Zuax48'
+   }
+ },
+ contentDetails: {
+   duration: 'PT3M4S',
+   dimension: '2d',
+   definition: 'hd',
+   caption: 'false',
+   licensedContent: true,
+   regionRestriction: { allowed: [Array] },
+   contentRating: {},
+   projection: 'rectangular'
+ },
+ player: {
+   embedHtml: '<iframe width="480" height="270" src="//www.youtube.com/embed/MZ3Vh8jZFdE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+ }
+} +2ms
+{
+ kind: 'youtube#video',
+ etag: 'Il9_0PViFatR-fYkDsNWLOCbzTw',
+ id: 'zVO5xTAbxm8',
+ snippet: {
+   publishedAt: '2014-01-16T09:55:53Z',
+   channelId: 'UCweOkPb1wVVH0Q0Tlj4a5Pw',
+   title: "[MV] GIRL'S DAY(걸스데이) _ Something (Dance ver.)",
+   description: "[MV] GIRL'S DAY(걸스데이) _ Something (Dance ver.)\n" +
+     '\n' +
+     "LOEN MUSIC changes the name to '1theK[wʌnðəkeɪ]' to be a global K-POP hub!\n" +
+     "로엔뮤직이 새 이름 '1theK(원더케이)'과 함께 글로벌 K-POP 허브채널로 도약합니다.\n" +
+     '\n' +
+     '*English subtitles are now available. :D\n' +
+     "(Please click on 'CC' button or activate 'Interactive Transcript' function)\n" +
+     '\n' +
+     ':: iTunes DL : https://itunes.apple.com/us/album/geolseudei-miniaelbeom-3jib/id791401935\n' +
+     '\n' +
+     "Girl's Day, who had a hot year with the song 'Expect' and 'Female president' in 2013, are coming back this 2014 with the new song 'Something' made with Double Sidekick. This year they are expected to be as hot as the Park Ji Yoon in 1998. \n" +
+     '\n' +
+     "The title song 'Something' talks about a girl who cheats on his girlfriend with other girls, and the girl who is in love with the bad boy. It talks about the feelings in between. This song got rid of the electric sound most dance songs have, and it has a more Hip-hop groove and acoustic instrument sounds that allows us to listen to Girl's Day's voices even more. \n" +
+     '\n' +
+     '▶ 1theK FB : https://www.facebook.com/1theK\n' +
+     '▶ 1theK TW : https://twitter.com/1theK\n' +
+     '▶ 1theK G+ : http://goo.gl/mJCt9c\n' +
+     '\n' +
+     '2013年「期待して」、「女性大統領」で最もホットな一年を送ったガールズデイが2014年イダンヨプチャギと手を組んだ新曲「Something」で3連打成功に挑戦する。この曲は、1998年オム•ジョンファの「招待」、2000年パク•ジユンの「成人式」の後を継ぐ2014年版の「招待」と「成人式」になると期待を集めている。 \n' +
+     '\n' +
+     'タイトル曲「Something」は、他の女性に会いながら嘘をつく男と、その男を愛する女性との間の微妙な感情や出来事を扱った曲だ。「Something」は、一般的なダンス曲の電子音を排除して、ヒップホップ・グルーヴにアコースティックな楽器構成でガールズデイの声により集中できるようにした。 \n' +
+     '\n' +
+     "2013년 '기대해' '여자대통령'으로 가장 뜨거운 한해를 보낸 걸스데이가 2014년 이단옆차기와 손잡은 신곡 'Something'으로 3연타 성공에 도전한다. 이곡은 1998년 엄정화 '초대' 2000년 박지윤 '성인식'의 뒤를 이은 2014년 판 '초대'와 '성인식'이 될 것으로 기대를 모은다. \n" +
+     '\n' +
+     "이번 타이틀곡 'Something'은 다른 여자에게 한 눈 팔며 거짓말하는 남자와 그 남자를 사랑하는 여자 사이에 생기는 미묘한 감정과 사건을 다룬 노래다. 이곡은 일반적인 댄스곡의 전자음을 배재하고 Hip-hop Groove에 Acoustic한 악기구성으로 걸스데이의 목소리에 더욱더 집중할 수 있게 만들었다.",
+   thumbnails: {
+     default: [Object],
+     medium: [Object],
+     high: [Object],
+     standard: [Object],
+     maxres: [Object]
+   },
+   channelTitle: '1theK (원더케이)',
+   tags: [
+     '로엔',         '로엔티비',     '로엔뮤직',
+     'loen',         'loentv',       'loenmusic',
+     '韓流',         '韓国',         'kpop',
+     'artist',       'mv',           'teaser',
+     '뮤비',         '티져',         'ロエン',
+     'ミュージック', 'テレビ',       'ミュージックビデオ',
+     'ティーザー',   'ケーポップ',   '韓国の歌',
+     'アイドル',     'エスエフ',     'シー・エス・アイ',
+     '２４時間前',   'レッツダンス', '踊り',
+     'ダンス',       '振付け',       'インタビュー',
+     'イベント',     'ラントゥユー', 'ライブ',
+     'new song',     '신곡',         '걸스데이',
+     'something',    "girl's day",   '썸씽',
+     'Dance',        'rjftmepdl',    '햐신',
+     'girls',        '햐긴',         '데이',
+     '썸띵',         '섬띵',         '섬싱',
+     '혜리',         'gPfl',         'alsdk',
+     '미나',         'thwls',        'dbfk'
+   ],
+   categoryId: '10',
+   liveBroadcastContent: 'none',
+   localized: {
+     title: "[MV] GIRL'S DAY(걸스데이) _ Something (Dance ver.)",
+     description: "[MV] GIRL'S DAY(걸스데이) _ Something (Dance ver.)\n" +
+       '\n' +
+       "LOEN MUSIC changes the name to '1theK[wʌnðəkeɪ]' to be a global K-POP hub!\n" +
+       "로엔뮤직이 새 이름 '1theK(원더케이)'과 함께 글로벌 K-POP 허브채널로 도약합니다.\n" +
+       '\n' +
+       '*English subtitles are now available. :D\n' +
+       "(Please click on 'CC' button or activate 'Interactive Transcript' function)\n" +
+       '\n' +
+       ':: iTunes DL : https://itunes.apple.com/us/album/geolseudei-miniaelbeom-3jib/id791401935\n' +
+       '\n' +
+       "Girl's Day, who had a hot year with the song 'Expect' and 'Female president' in 2013, are coming back this 2014 with the new song 'Something' made with Double Sidekick. This year they are expected to be as hot as the Park Ji Yoon in 1998. \n" +
+       '\n' +
+       "The title song 'Something' talks about a girl who cheats on his girlfriend with other girls, and the girl who is in love with the bad boy. It talks about the feelings in between. This song got rid of the electric sound most dance songs have, and it has a more Hip-hop groove and acoustic instrument sounds that allows us to listen to Girl's Day's voices even more. \n" +
+       '\n' +
+       '▶ 1theK FB : https://www.facebook.com/1theK\n' +
+       '▶ 1theK TW : https://twitter.com/1theK\n' +
+       '▶ 1theK G+ : http://goo.gl/mJCt9c\n' +
+       '\n' +
+       '2013年「期待して」、「女性大統領」で最もホットな一年を送ったガールズデイが2014年イダンヨプチャギと手を組んだ新曲「Something」で3連打成功に挑戦する。この曲は、1998年オム•ジョンファの「招待」、2000年パク•ジユンの「成人式」の後を継ぐ2014年版の「招待」と「成人式」になると期待を集めている。 \n' +
+       '\n' +
+       'タイトル曲「Something」は、他の女性に会いながら嘘をつく男と、その男を愛する女性との間の微妙な感情や出来事を扱った曲だ。「Something」は、一般的なダンス曲の電子音を排除して、ヒップホップ・グルーヴにアコースティックな楽器構成でガールズデイの声により集中できるようにした。 \n' +
+       '\n' +
+       "2013년 '기대해' '여자대통령'으로 가장 뜨거운 한해를 보낸 걸스데이가 2014년 이단옆차기와 손잡은 신곡 'Something'으로 3연타 성공에 도전한다. 이곡은 1998년 엄정화 '초대' 2000년 박지윤 '성인식'의 뒤를 이은 2014년 판 '초대'와 '성인식'이 될 것으로 기대를 모은다. \n" +
+       '\n' +
+       "이번 타이틀곡 'Something'은 다른 여자에게 한 눈 팔며 거짓말하는 남자와 그 남자를 사랑하는 여자 사이에 생기는 미묘한 감정과 사건을 다룬 노래다. 이곡은 일반적인 댄스곡의 전자음을 배재하고 Hip-hop Groove에 Acoustic한 악기구성으로 걸스데이의 목소리에 더욱더 집중할 수 있게 만들었다."
+   }
+ },
+ contentDetails: {
+   duration: 'PT3M25S',
+   dimension: '2d',
+   definition: 'hd',
+   caption: 'true',
+   licensedContent: false,
+   contentRating: {},
+   projection: 'rectangular'
+ },
+ player: {
+   embedHtml: '<iframe width="480" height="270" src="//www.youtube.com/embed/zVO5xTAbxm8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+ }
+} +2ms
+all tests passed +53s
+
+input a phrase you'd like to hear.
+q
+phrase = q +8s
+phrase look-up not yet implemented +0ms
+resources dir exists +1m
+loaded config file successfully +0ms
+youtube api usage = 2 +0ms
+
+=== DONE ===
+owengallagher@owenlaptop eavesdrop % 

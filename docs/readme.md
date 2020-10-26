@@ -33,3 +33,12 @@ system from environment (env) object.
 - [x] add simple html template page for showing video results of a search
 
 - [x] create results tests to add videos to the video player
+
+- [x] alternative methods of getting captions for a video
+
+[https://stackoverflow.com/a/21550325/10200417](https://stackoverflow.com/a/21550325/10200417)
+
+[https://stackoverflow.com/questions/10036796/how-to-extract-subtitles-from-youtube-videos](https://stackoverflow.com/questions/10036796/how-to-extract-subtitles-from-youtube-videos)
+
+This [Medium post](https://medium.com/@cafraser/how-to-download-public-youtube-captions-in-xml-b4041a0f9352)
+explains a lot of what I ended up doing as a work-around.

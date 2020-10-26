@@ -28,7 +28,8 @@ import Logger from './logger.js'
 
 import {
 	translate,
-	translate_n
+	translate_n,
+	ask
 } from './io.js'
 
 import ApiClient from './api_client.js'
@@ -85,7 +86,7 @@ export function test_filesystem() {
 					if (err) {
 						log.error('failed to remove test dir from ' + TEST_DIR_PATH)
 						log.error(err)
-						reject('filesystem.rmdir')
+						reject('tests.filesystem.rmdir')
 					}
 					else {
 						log.info('removed test directory from ' + TEST_DIR_PATH)
@@ -94,7 +95,7 @@ export function test_filesystem() {
 				})
 			}
 			else {
-				reject('filesystem.mkdir')
+				reject('tests.filesystem.mkdir')
 			}
 		})
 	})
@@ -112,7 +113,10 @@ export function test_parallel() {
 		for (let i=0; i<cpu_count; i++) {
 			let child = process_fork(
 				'eavesdrop_child.js', 
-				['--logging', log.level, '--do', 'test_parallel']
+				[
+					'--logging', log.level, 
+					'--do', 'test-parallel'
+				]
 			)
 			
 			child.on('message', function(msg) {
@@ -129,7 +133,60 @@ export function test_parallel() {
 			})
 			child.on('error', function(err) {
 				log.error(err)
-				reject('fork')
+				reject('tests.parallel.fork')
+			})
+		}
+	})
+}
+
+export function test_parallel_messages() {
+	return new Promise(function(resolve, reject) {
+		log.debug('begin messaging parallelization test')
+		log.warning('this test has not been debugged to work')
+		
+		let cpu_count = os.cpus().length
+		cpu_count = 1
+		log.info(`detected ${cpu_count} cpus; launching ${cpu_count} child processes`)
+		
+		let success_count = 0
+		
+		for (let i=0; i<1; i++) {
+			let child = process_fork(
+				'eavesdrop_child.js', 
+				[
+					'--logging', log.level, 
+					'--do', 'test-message'
+				]
+			)
+			
+			child.on('message', function(msg) {
+				msg = new String(msg)
+				if (msg.startsWith('ask:')) {
+					ask(`${child.pid}:${msg}`)
+					.then(function(reply) {
+						log.debug(`sending ${reply} to child ${child.pid}`)
+						child.send(`reply:${reply}`)
+					})
+					.catch(function(err) {
+						log.error(err)
+						reject('test.parallel_messages.reply')
+					})
+				}
+				else {
+					log.info(msg.toString())
+				}
+			})
+			child.on('exit', function(code,signal) {
+				log.info(`child ${child.pid} exited with code ${code}, signal ${signal}`)
+				success_count++
+
+				if (success_count >= cpu_count) {
+					resolve()
+				}
+			})
+			child.on('error', function(err) {
+				log.error(err)
+				reject('tests.parallel_detached.fork')
 			})
 		}
 	})
@@ -144,7 +201,7 @@ export function test_request() {
 		request(test_url, function(err, res, body) {
 			if (err) {
 				log.error(err)
-				reject('request.get')
+				reject('tests.request.get')
 			}
 			else {
 				log.debug('status code = ' + res.statusCode)
@@ -195,14 +252,15 @@ export function test_translation() {
 			resolve()
 		}
 		catch (err) {
-			reject(err)
+			log.error(err)
+			reject('tests.translation.exception')
 		}
 	})
 }
 
 export function test_api_youtube_search() {
 	return new Promise(function(resolve, reject) {
-		let api_client = new ApiClient('api_key')
+		let api_client = new ApiClient()
 		
 		// temporarily reduce page size for testing
 		let restore_search_results_max = api_client.search_results_max
@@ -219,6 +277,11 @@ export function test_api_youtube_search() {
 			p = p.then(function(res) {
 				if (res) {
 					log.info(`${r}: fetched ${res.data.items.length} results for page ${page_token}`)
+					
+					for (let item of res.data.items) {
+						log.debug(item)
+					}
+					
 					page_token = res.next_page
 				}
 				
@@ -232,7 +295,7 @@ export function test_api_youtube_search() {
 			.catch(function(err) {
 				go = false
 				log.error(err)
-				return Promise.reject('test.api_youtube_search')
+				return Promise.reject('tests.api_youtube_search')
 			})
 		}
 		
@@ -241,7 +304,127 @@ export function test_api_youtube_search() {
 			resolve()
 		})
 		.catch(function(err) {
-			reject(err)
+			log.error(err)
+			reject('tests.api_youtube_search')
+		})
+	})
+}
+
+export function test_api_youtube_videos() {
+	return new Promise(function(resolve,reject) {
+		let api_client = new ApiClient()
+		
+		let video_ids = ['UelDrZ1aFeY','Xl-BNTeJXjw','MZ3Vh8jZFdE','zVO5xTAbxm8']
+		log.debug(`testing youtube_api videos list with ids = ${video_ids}`)
+		
+		api_client.youtube_videos_list(video_ids)
+		.then(function(res) {
+			log.info(`fetched ${res.data.items.length} videos`)
+			
+			for (let video of res.data.items) {
+				log.debug(video)
+			}
+			
+			resolve()
+		})
+		.catch(function(err) {
+			log.error(`test_api_youtube_videos: ${err}`)
+			reject('tests.api_youtube_videos')
+		})
+	})
+}
+
+export function test_api_youtube_captions() {
+	return new Promise(function(resolve,reject) {
+		let api_client = new ApiClient()
+		
+		//let video_ids = ['UelDrZ1aFeY','Xl-BNTeJXjw','MZ3Vh8jZFdE','zVO5xTAbxm8']
+		let video_ids = ['jRTQbAtlBSI']
+		log.debug(`testing youtube_api captions list with ids = ${video_ids}`)
+		
+		let promises = []
+		for (let video_id of video_ids) {
+			let p = api_client.youtube_captions_list(video_id)
+			.then(function(data) {
+				log.info(`fetched ${data.items.length} captions`)
+				
+				for (let captions of data.items) {
+					log.debug(captions)
+				}
+			
+				return Promise.resolve()
+			})
+			.catch(function(err) {
+				log.error(`test_api_youtube_captions: ${err}`)
+				return Promise.reject('tests.api_youtube_captions')
+			})
+			
+			promises.push(p)
+		}
+		
+		Promise.all(promises)
+		.then(function() {
+			log.info('youtube captions test complete')
+			resolve()
+		})
+		.catch(function(errors) {
+			log.error(errors)
+			reject('test.api_youtube_captions')
+		})
+	})
+}
+
+export function test_api_youtube_captions_download() {
+	return new Promise(function(resolve,reject) {
+		let api_client = new ApiClient()
+		
+		let video_id = 'jRTQbAtlBSI'
+		let captions_id = '1dsGRExfCQWEOXQa-8X3a99UPbr63e9wmMOvnytjSSA='
+		
+		api_client.youtube_captions_download(captions_id, video_id)
+		.then(function(path) {
+			log.info(`captions downloaded to ${path}`)
+			resolve()
+		})
+		.catch(function(err) {
+			log.error(err)
+			reject('test.api_youtube_captions_download')
+		})
+	})
+}
+
+export function test_api_youtube_timedtext_download() {
+	return new Promise(function(resolve,reject) {
+		let api_client = new ApiClient()
+		
+		let video_ids = ['UelDrZ1aFeY','Xl-BNTeJXjw','MZ3Vh8jZFdE','zVO5xTAbxm8']
+		let video_id = video_ids[0]
+		let downloads = 0
+		let p = api_client.youtube_timedtext_download(video_id)
+		for (let i=1; i<video_ids.length; i++) {
+			p = p
+			.then(function(path) {
+				log.info(`timedtext downloaded to ${path}`)
+				downloads++
+			})
+			.catch(function(err) {
+				log.error(err)
+			})
+			.finally(function() {
+				return api_client.youtube_timedtext_download(video_ids[i])
+			})
+		}
+		
+		p.then(function(path) {
+			log.info(`timedtext downloaded to ${path}`)
+			downloads++
+		})
+		.catch(function(err) {
+			log.error(err)
+		})
+		.finally(function() {
+			log.info(`downloaded ${downloads}/${video_ids.length} timedtext files`)
+			resolve()
 		})
 	})
 }
@@ -313,7 +496,7 @@ export function test_results() {
 		// failure
 		.catch(function(err) {
 			log.error(err)
-			reject(err)
+			reject('tests.results')
 		})
 	})
 }
@@ -339,7 +522,7 @@ export function test_promise_assign_outer(do_resolve=true) {
 				resolve()
 			}
 			else {
-				reject('test.promise_assign_outer')
+				reject('tests.promise_assign_outer')
 			}
 		})
 	})

@@ -38,6 +38,10 @@ import {
 } from './results.js'
 
 import {
+	log as read_captions_log
+} from './read_captions.js'
+
+import {
 	log as eavesdrop_log,
 	finish as eavesdrop_finish
 } from './eavesdrop.js'
@@ -55,6 +59,7 @@ export function init_loggers(logging_level) {
 	api_log.enable(logging_level)
 	io_log.enable(logging_level)
 	results_log.enable(logging_level)
+	read_captions_log.enable(logging_level)
 	eavesdrop_log.enable(logging_level)
 }
 

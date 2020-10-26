@@ -3,3 +3,6 @@ secrets/
 
 # dependencies
 node_modules/
+
+# temporary files
+temp/

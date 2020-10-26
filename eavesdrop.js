@@ -8,14 +8,21 @@ Owen Gallagher
 // external imports
 
 import fs from 'fs'
+
 import debug from 'debug'
+
 import cli_args from 'command-line-args'
+
+import { 
+	fork as process_fork 
+} from 'child_process'
 
 // local imports
 
 import { 
 	PROGRAM_NAME,
 	LOG_LEVEL,
+	TOTAL_RESULTS_MAX,
 	config as config_consts 
 } from './consts.js'
 
@@ -37,9 +44,14 @@ import {
 	test_tests,
 	test_filesystem,
 	test_parallel,
+	test_parallel_messages,
 	test_request,
 	test_translation,
 	test_api_youtube_search,
+	test_api_youtube_videos,
+	test_api_youtube_captions,
+	test_api_youtube_captions_download,
+	test_api_youtube_timedtext_download,
 	test_results_show,
 	test_results,
 	test_promise_assign_outer
@@ -52,7 +64,8 @@ import {
 import {
 	init as init_api_client,
 	config as config_api_client,
-	finish as finish_api_client
+	finish as finish_api_client,
+	ApiClient
 } from './api_client.js'
 
 // constants
@@ -120,9 +133,14 @@ cli args:
 			tests
 			filesystem
 			parallel
+			parallel-messages
 			request
 			translation
 			api-youtube-search
+			api-youtube-videos
+			api-youtube-captions
+			api-youtube-captions-download
+			api-youtube-timedtext-download
 			results-show
 			results
 			promise-assign-outer
@@ -208,9 +226,15 @@ function tests() {
 		}
 		
 		if (all_tests || test_selection.includes('parallel')) {
-			//parallel threads with cluster module
+			//parallel fork
 			log.info('testing parallelization')
 			test_promises.push(test_parallel())
+		}
+		
+		if (all_tests || test_selection.includes('parallel-messages')) {
+			//parallel fork with detached children
+			log.info('testing parallelization with message-passing')
+			test_promises.push(test_parallel_messages())
 		}
 		
 		if (all_tests || test_selection.includes('request')) {
@@ -229,6 +253,29 @@ function tests() {
 			//api: youtube search
 			log.info('testing api client youtube search')
 			test_promises.push(test_api_youtube_search())
+		}
+		
+		if (all_tests || test_selection.includes('api-youtube-videos')) {
+			//api: youtube videos list
+			log.info('testing api client youtube videos list')
+			test_promises.push(test_api_youtube_videos())
+		}
+		
+		if (all_tests || test_selection.includes('api-youtube-captions')) {
+			//api: youtube captions list
+			log.info('testing api client youtube captions list')
+			test_promises.push(test_api_youtube_captions())
+		}
+		
+		if (all_tests || test_selection.includes('api-youtube-captions-download')) {
+			//api: youtube captions download
+			log.info('testing api client youtube captions download')
+			test_promises.push(test_api_youtube_captions_download())
+		}
+		
+		if (all_tests || test_selection.includes('api-youtube-timedtext-download')) {
+			//api: youtube timedtext download
+			test_promises.push(test_api_youtube_timedtext_download())
 		}
 		
 		if (all_tests || test_selection.includes('results-show')) {
@@ -268,13 +315,136 @@ function tests() {
 	})
 }
 
+function eavesdrop_children() {
+	log.info('launching eavesdrop child processes')
+	
+	log.debug('launching captions list child')
+	let captions_list_child = process_fork(
+		'eavesdrop_child.js', 
+		[
+			'--logging', log.level, 
+			'--do', 'captions-list-download'
+		]
+	)
+	captions_list_child.on('message', function(msg) {
+		log.debug('captions-list-download:' + msg)
+	})
+	captions_list_child.on('exit', function(code,signal) {
+		log.info(`captions-list-download child exited with code ${code}, signal ${signal}`)
+	})
+	captions_list_child.on('error', function(err) {
+		log.error(err)
+		reject('eavesdrop_children.captions-list-download')
+	})
+	
+	log.debug('launching videos details child')
+	let videos_details_child = process_fork(
+		'eavesdrop_child.js',
+		[
+			'--logging', log.level,
+			'--do', 'videos-details'
+		]
+	)
+	videos_details_child.on('message', function(msg) {
+		log.debug('videos-details:' + msg)
+	})
+	videos_details_child.on('exit', function(code,signal) {
+		log.info(`videos-details child exited with code ${code}, signal ${signal}`)
+	})
+	videos_details_child.on('error', function(err) {
+		log.error(err)
+		reject('eavesdrop_children.videos-details')
+	})
+	
+	log.debug('launching captions read child')
+	let captions_read_child = process_fork(
+		'eavesdrop_child.js',
+		[
+			'--logging', log.level,
+			'--do', 'captions-read'
+		]
+	)
+	captions_read_child.on('message', function(msg) {
+		log.debug('captions-read:' + msg)
+	})
+	captions_read_child.on('exit', function(code,signal) {
+		log.info(`captions-read child exited with code ${code}, signal ${signal}`)
+	})
+	captions_read_child.on('error', function(err) {
+		log.error(err)
+		reject('eavesdrop_children.captions-read')
+	})
+	
+	return {
+		captions_list: captions_list_child,
+		videos_details: videos_details_child,
+		captions_read: captions_read_child
+	}
+}
+
 function eavesdrop() {
+	let api_client = new ApiClient()
+	
 	return new Promise(function(resolve) {
 		ask('\ninput a phrase you\'d like to hear.\n')
 		.then(function(phrase) {
 			if (phrase) {
 				log.info('phrase = ' + phrase)
-				log.error('phrase look-up not yet implemented')
+				
+				// spawn child processes
+				let children = eavesdrop_children()
+				
+				// get video ids matching phrase
+				let page = undefined
+				let more_pages = true
+				let total_results = 0
+				let search_p = api_client.youtube_search(phrase)
+				
+				while (more_pages) {
+					search_p = search_p
+					.then(function(res) {
+						// res = {data,next_page,prev_page}
+						let num_results = res.data.items.length
+						total_results += num_results
+						log.debug(`got ${num_results} video ids for page ${page}`)
+						
+						// pass video ids to captions-list
+						let video_ids = []
+						for (let id of res.data.items) {
+							video_ids.push(id.videoId)
+						}
+						
+						children.captions_list.send({
+							video_ids: video_ids
+						})
+						
+						// pass video ids to videos-details
+						
+						// captions-list will pass
+						
+						if (res.next_page && total_results < TOTAL_RESULTS_MAX) {
+							// advance to next results page
+							page = res.next_page
+						}
+						else {
+							// finish
+							log.info(`found ${total_results} candidate videos`)
+							more_pages = false
+						}
+					})
+					.catch(function(err) {
+						log.error(err)
+						log.info(`skipping search results for page ${page}`)
+						more_pages = false
+					})
+				}
+				
+				// send "video ids search done" message to children
+				let done = {
+					done: true
+				}
+				children.captions_list.send(done)
+				children.videos_details.send(done)
 				
 				resolve()
 			}

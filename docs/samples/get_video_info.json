@@ -1,0 +1,43 @@
+{
+	"//notes": {
+		"author": "Owen Gallagher",
+		"date": "2020-10-25",
+		"description": "How to get captions for a video without using the data api, which would 
+		otherwise require authentication as the video owner. This is the result of a GET to
+		http://www.youtube.com/get_video_info?&video_id=<video-id>, taken from this answer:
+		https://stackoverflow.com/a/39761435/10200417\n
+		\n
+		The result is url-encoded, which when decoded yields a bunch of text, including a JSON object
+		containing the url (baseUrl) for getting a timed text XML document of the transcript.
+		See docs/samples/get_timedtext.xml for the result of that request."
+	},
+	"captions": {
+		"playerCaptionsRenderer": {
+			"baseUrl": "https://www.youtube.com/api/timedtext?v=zVO5xTAbxm8&asr_langs=de,en,es,fr,it,ja,ko,nl,pt,ru&caps=asr&xoaf=4&hl=es&ip=0.0.0.0&ipbits=0&expire=1603667796&sparams=ip,ipbits,expire,v,asr_langs,caps,xoaf&signature=B9B527E1C93CB6339F3DB860D3E6638CA9E99A94.3B3E4037AF439D9CAB0FD2ACA0BF519D07F47DA8&key=yt8",
+			"visibility": "UNKNOWN"
+		},
+		"playerCaptionsTracklistRenderer": {
+			"captionTracks": [
+				{
+					"baseUrl": "https://www.youtube.com/api/timedtext?v=zVO5xTAbxm8&asr_langs=de,en,es,fr,it,ja,ko,nl,pt,ru&caps=asr&xoaf=4&hl=es&ip=0.0.0.0&ipbits=0&expire=1603667796&sparams=ip,ipbits,expire,v,asr_langs,caps,xoaf&signature=66B7B510706552413C5CB1559B929117D656429B.69D8D16A66AE9EB6999F4E49122504863BB5B435&key=yt8&lang=en-US",
+					"name": {
+						"simpleText": "Inglés+(Estados+Unidos)"
+					},
+					"vssId": ".en-US",
+					"languageCode": "en-US",
+					"isTranslatable": true
+				}
+			],
+			"audioTracks": [
+				{
+					"captionTrackIndices": [
+						0
+					],
+					"defaultCaptionTrackIndex": 0,
+					"visibility": "UNKNOWN",
+					"hasDefaultTrack": true
+				}
+			]
+		}
+	}
+}

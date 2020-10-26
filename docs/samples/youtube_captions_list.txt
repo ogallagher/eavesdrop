@@ -1,0 +1,143 @@
+...
+testing api client youtube captions list
+testing youtube_api videos list with ids = UelDrZ1aFeY,Xl-BNTeJXjw,MZ3Vh8jZFdE,zVO5xTAbxm8
+performing ApiClient.youtube_captions for UelDrZ1aFeY
+performing ApiClient.youtube_captions for Xl-BNTeJXjw
+performing ApiClient.youtube_captions for MZ3Vh8jZFdE
+performing ApiClient.youtube_captions for zVO5xTAbxm8
+[]
+fetched 0 captions
+[
+ {
+   kind: 'youtube#caption',
+   etag: 'nrZ05d4PBoXFcZwZdvqHEz0mW7M',
+   id: 'Nlh-2onrtt-U-wTjxiK4qXaEZraqxlx5f_-gf-liARg=',
+   snippet: {
+     videoId: 'Xl-BNTeJXjw',
+     lastUpdated: '2020-09-11T21:43:24.444000Z',
+     trackKind: 'asr',
+     language: 'en',
+     name: '',
+     audioTrackType: 'unknown',
+     isCC: false,
+     isLarge: false,
+     isEasyReader: false,
+     isDraft: false,
+     isAutoSynced: false,
+     status: 'serving'
+   }
+ },
+ {
+   kind: 'youtube#caption',
+   etag: 'n_NrRgBfqFVBXIqdFhCqtM8iJ5I',
+   id: 's1av9ySNQ6E7lCNw6c0-vPwMb9AQkbFcN7AuFF4DPH0=',
+   snippet: {
+     videoId: 'Xl-BNTeJXjw',
+     lastUpdated: '2020-02-21T23:40:51.764000Z',
+     trackKind: 'standard',
+     language: 'en',
+     name: 'en',
+     audioTrackType: 'unknown',
+     isCC: false,
+     isLarge: false,
+     isEasyReader: false,
+     isDraft: false,
+     isAutoSynced: false,
+     status: 'serving'
+   }
+ }
+]
+fetched 2 captions
+{
+ kind: 'youtube#caption',
+ etag: 'nrZ05d4PBoXFcZwZdvqHEz0mW7M',
+ id: 'Nlh-2onrtt-U-wTjxiK4qXaEZraqxlx5f_-gf-liARg=',
+ snippet: {
+   videoId: 'Xl-BNTeJXjw',
+   lastUpdated: '2020-09-11T21:43:24.444000Z',
+   trackKind: 'asr',
+   language: 'en',
+   name: '',
+   audioTrackType: 'unknown',
+   isCC: false,
+   isLarge: false,
+   isEasyReader: false,
+   isDraft: false,
+   isAutoSynced: false,
+   status: 'serving'
+ }
+}
+{
+ kind: 'youtube#caption',
+ etag: 'n_NrRgBfqFVBXIqdFhCqtM8iJ5I',
+ id: 's1av9ySNQ6E7lCNw6c0-vPwMb9AQkbFcN7AuFF4DPH0=',
+ snippet: {
+   videoId: 'Xl-BNTeJXjw',
+   lastUpdated: '2020-02-21T23:40:51.764000Z',
+   trackKind: 'standard',
+   language: 'en',
+   name: 'en',
+   audioTrackType: 'unknown',
+   isCC: false,
+   isLarge: false,
+   isEasyReader: false,
+   isDraft: false,
+   isAutoSynced: false,
+   status: 'serving'
+ }
+}
+[
+ {
+   kind: 'youtube#caption',
+   etag: 'wJSaHfn2eC-hZNh8GkIuVRXA1us',
+   id: 'NcIt_yGStF5S1UbjdaDoCRgoE7JA_DVGzTxbUNWYzo8=',
+   snippet: {
+     videoId: 'zVO5xTAbxm8',
+     lastUpdated: '2014-01-17T01:37:44.377000Z',
+     trackKind: 'standard',
+     language: 'en-US',
+     name: '',
+     audioTrackType: 'unknown',
+     isCC: false,
+     isLarge: false,
+     isEasyReader: false,
+     isDraft: false,
+     isAutoSynced: false,
+     status: 'serving'
+   }
+ }
+]
+fetched 1 captions
+{
+ kind: 'youtube#caption',
+ etag: 'wJSaHfn2eC-hZNh8GkIuVRXA1us',
+ id: 'NcIt_yGStF5S1UbjdaDoCRgoE7JA_DVGzTxbUNWYzo8=',
+ snippet: {
+   videoId: 'zVO5xTAbxm8',
+   lastUpdated: '2014-01-17T01:37:44.377000Z',
+   trackKind: 'standard',
+   language: 'en-US',
+   name: '',
+   audioTrackType: 'unknown',
+   isCC: false,
+   isLarge: false,
+   isEasyReader: false,
+   isDraft: false,
+   isAutoSynced: false,
+   status: 'serving'
+ }
+}
+[]
+fetched 0 captions
+youtube captions test complete
+all tests passed
+
+input a phrase you'd like to hear.
+$quit
+
+input a phrase you'd like to hear.
+resources dir exists +6s
+loaded config file successfully
+youtube api usage = 802
+
+=== DONE ===

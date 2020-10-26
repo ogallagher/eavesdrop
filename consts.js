@@ -38,7 +38,34 @@ export let LOCALE_DIR_PATH = './locales/'
 export let RESULTS_DIR_PATH = './results/'
 export let VIDEO_PLAYER_PATH = RESULTS_DIR_PATH + 'video_player.html'
 
+export let TEMP_DIR_PATH = './temp/'
+export let CAPTIONS_PATH_PREFIX = TEMP_DIR_PATH + 'captions_'
+export let VIDEO_PATH_PREFIX = TEMP_DIR_PATH + 'video_'
+export let TIMEDTEXT_PATH_PREFIX = TEMP_DIR_PATH + 'timedtext_'
+
+export let CAPTIONS_FILETYPE = 'srt'
+export let TIMEDTEXT_FILETYPE = 'xml'
+
+export let YTB_VIDEO_INFO_URL = 'https://www.youtube.com/get_video_info'
+export let YTB_VIDEO_INFO_EURL = 'https://youtube.googleapis.com/v/'
+export let YTB_VIDEO_INFO_VID_PARAM = 'video_id='
+export let YTB_VIDEO_INFO_BEGIN = 'player_response='
+export let YTB_VIDEO_INFO_END = '}&'
+
+// how many chars in YTB_VIDEO_INFO_END include the video info JSON
+export let YTB_VIDEO_INFO_END_OVERLAP = 1
+
+export let YTB_TIMEDTEXT_LANG_PARAM = 'lang=' //this doesn't work
+
+export let URL_QUERY_PREFIX = '?'
+export let URL_PARAM_DELIM = '&'
+
 export let CMD_PREFIX = '$'
+
+export let TTXT_TAG_TEXT = 'text'
+export let TTXT_ATTR_START = 'start'
+export let TTXT_ATTR_DUR = 'dur'
+export let TTXT_REGEX_COMPLETE = /<\w+[^>]+>[^<]+<\/\w+>/g
 
 export let HTTP_STATUS_OK = 200
 
@@ -49,6 +76,8 @@ export let APIU_YTB_SEARCH = 100
 export let APIU_YTB_VIDEOS_LIST = 1
 export let APIU_YTB_CAPTIONS_LIST = 50
 export let APIU_YTB_CAPTIONS_DOWNLOAD = 200
+
+export let TOTAL_RESULTS_MAX = 10//64
 
 // constants
 
@@ -180,4 +209,8 @@ export function config(config) {
 	}
 	
 	console.log(`set ${i} constants from config file at ${CONFIG_PATH}`)
+}
+
+export function set_program_name(program_name) {
+	PROGRAM_NAME = program_name
 }

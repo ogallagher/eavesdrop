@@ -109,6 +109,11 @@ export function ask(question, commandable=true) {
 	})
 }
 
+export function get_language() {
+	let locale = i18n.getLocale()
+	return locale.substring(0,2)
+}
+
 export function translate(statement,constants,locale) {
 	if (do_translate) {
 		if (locale == undefined) {
