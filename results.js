@@ -59,7 +59,7 @@ function load_video_player() {
 	})
 }
 
-export function show() {
+export function show(results_path=VIDEO_PLAYER_PATH) {
 	log.debug('showing results in browser')
 	
 	let cmd_open
@@ -77,22 +77,22 @@ export function show() {
 			break
 	}
 	
-	process_exec(`${cmd_open} ${path.resolve(VIDEO_PLAYER_PATH)}`)
+	process_exec(`${cmd_open} ${path.resolve(results_path)}`)
 	
 	return Promise.resolve()
 }
 
-export function write() {
+export function write(results_path=VIDEO_PLAYER_PATH) {
 	return new Promise(function(resolve,reject) {
 		if (video_player_html != null) {
-			fs.writeFile(VIDEO_PLAYER_PATH, video_player_html.toString(), function(err) {
+			fs.writeFile(results_path, video_player_html.toString(), function(err) {
 				if (err) {
 					log.error(err)
 					reject('results.write.write')
 				}
 				else {
 					log.debug('wrote results to video player')
-					resolve()
+					resolve(results_path)
 				}
 			})
 		}

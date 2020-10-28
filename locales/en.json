@@ -1,5 +1,7 @@
 {
 	"\ninput a phrase you'd like to hear.\n": "\ninput a phrase you'd like to hear.\n",
 	"\ninput a search query to use for identifying video candidates \n(leave blank to use the same phrase as the search query)\n": "\ninput a search query to use for identifying video candidates \n(leave blank to use the same phrase as the search query)\n",
-	"phrase = {{phrase}}\nquery = {{query}}": "phrase = {{phrase}}\nquery = {{query}}"
+	"phrase = {{phrase}}\nquery = {{query}}": "phrase = {{phrase}}\nquery = {{query}}",
+	"waiting for child processes to have time to start...": "waiting for child processes to have time to start...",
+	"results file = {{results}}": "results file = {{results}}"
 }

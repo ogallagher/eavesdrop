@@ -62,7 +62,8 @@ import {
 } from './tests.js'
 
 import {
-	CMD_PREFIX
+	CMD_PREFIX,
+	USER_RESULTS_DIR_PATH
 } from './consts.js'
 
 import {
@@ -384,7 +385,7 @@ function eavesdrop_children(phrase) {
 			]
 		)
 		
-		console.log('waiting for child processes to have time to start...')
+		console.log(translate('waiting for child processes to have time to start...'))
 		setTimeout(() => {
 			let children = {
 				captions_download: captions_download_child,
@@ -530,7 +531,20 @@ input a search query to use for identifying video candidates
 							})
 							.finally(function() {
 								log.info('eavesdrop search complete! showing results')
-								results_write()
+								
+								let results_path = 
+									USER_RESULTS_DIR_PATH + 
+									phrase.replace(/[\s'".;:\[\]\(\)!#&|]+/g, '_') + 
+									'.html'
+								
+								console.log(translate(
+									'results file = {{results}}',
+									{
+										results: results_path
+									}
+								))
+								
+								results_write(results_path)
 								.then(results_show)
 								.catch(function(err) {
 									log.error(err)

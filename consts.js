@@ -38,6 +38,8 @@ export let LOCALE_DIR_PATH = './locales/'
 export let RESULTS_DIR_PATH = './results/'
 export let VIDEO_PLAYER_PATH = RESULTS_DIR_PATH + 'video_player.html'
 
+export let USER_RESULTS_DIR_PATH = RESULTS_DIR_PATH + 'user/'
+
 export let TEMP_DIR_PATH = './temp/'
 export let CAPTIONS_PATH_PREFIX = TEMP_DIR_PATH + 'captions_'
 export let VIDEO_PATH_PREFIX = TEMP_DIR_PATH + 'video_'

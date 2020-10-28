@@ -9,3 +9,6 @@ temp/
 
 # output examples
 *example.html
+
+# user output
+results/user/

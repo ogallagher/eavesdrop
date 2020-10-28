@@ -13,5 +13,9 @@
 	"and %s person observing it": {
 		"one": "y %s persona mirándolo",
 		"other": "y %s personas mirándolos"
-	}
+	},
+	"\ninput a search query to use for identifying video candidates \n(leave blank to use the same phrase as the search query)\n": "\npalabras que usar para encontrar vídeos candidatos \n(deja en blanco para usar la misma frase como términos de buscar)\n",
+	"phrase = {{phrase}}\nquery = {{query}}": "frase = {{phrase}}\ntérminos de búsqueda = {{query}}",
+	"waiting for child processes to have time to start...": "esperando a que se inicien los subprocesos...",
+	"results file = {{results}}": "resultados escritos a {{results}}"
 }
