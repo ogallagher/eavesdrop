@@ -1,18 +1,5 @@
 {
 	"\ninput a phrase you'd like to hear.\n": "\ninput a phrase you'd like to hear.\n",
-	"let's see how a plain phrase translates (without constants or numbers)": "let's see how a plain phrase translates (without constants or numbers)",
-	"this is a translation test for {{program}}, created by {{author}}": "this is a translation test for {{program}}, created by {{author}}",
-	"there is %s fish": {
-		"one": "there is %s fish",
-		"other": "there are %s fish"
-	},
-	"in %s fishbowl": {
-		"one": "in %s fishbowl",
-		"other": "in %s fishbowls"
-	},
-	"and %s person observing it": {
-		"one": "and %s person observing it",
-		"other": "and %s people observing them"
-	},
-	"\nwhat shall I tell eavesdrop root?\n": "\nwhat shall I tell eavesdrop root?\n",
+	"\ninput a search query to use for identifying video candidates \n(leave blank to use the same phrase as the search query)\n": "\ninput a search query to use for identifying video candidates \n(leave blank to use the same phrase as the search query)\n",
+	"phrase = {{phrase}}\nquery = {{query}}": "phrase = {{phrase}}\nquery = {{query}}"
 }

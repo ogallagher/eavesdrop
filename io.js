@@ -103,7 +103,8 @@ export function ask(question, commandable=true) {
 				resolve(response)
 			}
 			else {
-				resolve(false)
+				ask(question, commandable)
+				.then(resolve)
 			}
 		})
 	})
@@ -195,8 +196,9 @@ export function init_translation(locale) {
 					})
 				}
 				else {
+					let lang = locale.substring(0,2)
 					log.debug(`supported languages: ${i18n.getLocales()}`)
-					log.info('default language = ' + locale)
+					log.info('default language = ' + lang)
 					
 					i18n.configure({
 						locales: ['en', 'es'],
@@ -205,7 +207,7 @@ export function init_translation(locale) {
 							'en-*': 'en',
 							'es-*': 'es'
 						},
-						defaultLocale: locale,
+						defaultLocale: lang,
 						directory: LOCALE_DIR_PATH,
 					})
 					
