@@ -45,6 +45,7 @@ export let TIMEDTEXT_PATH_PREFIX = TEMP_DIR_PATH + 'timedtext_'
 
 export let CAPTIONS_FILETYPE = 'srt'
 export let TIMEDTEXT_FILETYPE = 'xml'
+export let JSON_FILETYPE = 'json'
 
 export let YTB_VIDEO_INFO_URL = 'https://www.youtube.com/get_video_info'
 export let YTB_VIDEO_INFO_EURL = 'https://youtube.googleapis.com/v/'
@@ -65,11 +66,14 @@ export let CMD_PREFIX = '$'
 export let TTXT_TAG_TEXT = 'text'
 export let TTXT_ATTR_START = 'start'
 export let TTXT_ATTR_DUR = 'dur'
-export let TTXT_REGEX_COMPLETE = /<\w+[^>]+>[^<]+<\/\w+>/g
+export let TTXT_REGEX_ESCAPE = /&[^;]+;/g
+
+export let CAPTION_SEARCH_FOUND = 'EV[found_query]'
 
 export let HTTP_STATUS_OK = 200
 
 export let VIDEO_HEIGHT = 200
+export let VIDEO_BEFORE_START = 2
 
 export let API_QUOTA_YOUTUBE = 10000
 export let APIU_YTB_SEARCH = 100
@@ -77,7 +81,7 @@ export let APIU_YTB_VIDEOS_LIST = 1
 export let APIU_YTB_CAPTIONS_LIST = 50
 export let APIU_YTB_CAPTIONS_DOWNLOAD = 200
 
-export let TOTAL_RESULTS_MAX = 10//64
+export let TOTAL_RESULTS_MAX = 50
 
 // constants
 
@@ -204,6 +208,12 @@ export function config(config) {
 		v = c.APIU_YTB_CAPTIONS_DOWNLOAD
 		if (v) {
 			APIU_YTB_CAPTIONS_DOWNLOAD = v
+			i++
+		}
+		
+		v = c.TOTAL_RESULTS_MAX
+		if (v) {
+			TOTAL_RESULTS_MAX = v
 			i++
 		}
 	}

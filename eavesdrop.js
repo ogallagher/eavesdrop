@@ -28,6 +28,7 @@ import {
 
 import {
 	init_loggers,
+	init_filesystem,
 	get_config,
 	finish as finish_util,
 	eavesdrop_commands_help
@@ -54,7 +55,9 @@ import {
 	test_api_youtube_timedtext_download,
 	test_results_show,
 	test_results,
-	test_promise_assign_outer
+	test_promise_assign_outer,
+	test_captions_reader,
+	test_eavesdrop_results
 } from './tests.js'
 
 import {
@@ -67,6 +70,13 @@ import {
 	finish as finish_api_client,
 	ApiClient
 } from './api_client.js'
+
+import {
+	clear_videos as results_clear_videos,
+	add_videos as results_add_videos,
+	write as results_write,
+	show as results_show
+} from './results.js'
 
 // constants
 
@@ -144,6 +154,8 @@ cli args:
 			results-show
 			results
 			promise-assign-outer
+			captions-reader
+			eavesdrop-results
 		]
 
 	(-h | --help)
@@ -305,148 +317,303 @@ function tests() {
 			test_promises.push(p)
 		}
 		
+		if (all_tests || test_selection.includes('captions-reader')) {
+			//read_captions: CaptionsReader.find_query()
+			log.info('testing search for query start time within captions file')
+			test_promises.push(test_captions_reader())
+		}
+		
+		if (all_tests || test_selection.includes('eavesdrop-results')) {
+			//use start-second found from CaptionsReader.find_query() combined with the embedHTML
+			//of the corresponding video details file to load the result into the results page.
+			log.info('testing eavesdrop results compilation')
+			test_promises.push(test_eavesdrop_results())
+		}
+		
+		let successes = 0
+		let failures = 0
 		Promise.all(test_promises)
 		.then(function() {
-			resolve()
+			successes++
 		})
-		.catch(function(failures) {
-			reject(failures)
+		.catch(function(failure) {
+			log.error('test failed: ' + failure)
+			failures++
+		})
+		.finally(function() {
+			if (failures == 0) {
+				resolve(successes)
+			}
+			else {
+				reject(failures)
+			}
 		})
 	})
 }
 
-function eavesdrop_children() {
-	log.info('launching eavesdrop child processes')
+function eavesdrop_children(phrase) {
+	return new Promise(function(resolve,reject) {
+		log.info('launching eavesdrop child processes')
 	
-	log.debug('launching captions list child')
-	let captions_list_child = process_fork(
-		'eavesdrop_child.js', 
-		[
-			'--logging', log.level, 
-			'--do', 'captions-list-download'
-		]
-	)
-	captions_list_child.on('message', function(msg) {
-		log.debug('captions-list-download:' + msg)
-	})
-	captions_list_child.on('exit', function(code,signal) {
-		log.info(`captions-list-download child exited with code ${code}, signal ${signal}`)
-	})
-	captions_list_child.on('error', function(err) {
-		log.error(err)
-		reject('eavesdrop_children.captions-list-download')
-	})
+		log.debug('launching captions download child')
+		let captions_download_child = process_fork(
+			'eavesdrop_child.js', 
+			[
+				'--logging', log.level, 
+				'--do', 'captions-download'
+			]
+		)
 	
-	log.debug('launching videos details child')
-	let videos_details_child = process_fork(
-		'eavesdrop_child.js',
-		[
-			'--logging', log.level,
-			'--do', 'videos-details'
-		]
-	)
-	videos_details_child.on('message', function(msg) {
-		log.debug('videos-details:' + msg)
-	})
-	videos_details_child.on('exit', function(code,signal) {
-		log.info(`videos-details child exited with code ${code}, signal ${signal}`)
-	})
-	videos_details_child.on('error', function(err) {
-		log.error(err)
-		reject('eavesdrop_children.videos-details')
-	})
+		log.debug('launching videos details child')
+		let videos_details_child = process_fork(
+			'eavesdrop_child.js',
+			[
+				'--logging', log.level,
+				'--do', 'videos-details'
+			]
+		)
 	
-	log.debug('launching captions read child')
-	let captions_read_child = process_fork(
-		'eavesdrop_child.js',
-		[
-			'--logging', log.level,
-			'--do', 'captions-read'
-		]
-	)
-	captions_read_child.on('message', function(msg) {
-		log.debug('captions-read:' + msg)
+		log.debug('launching captions read child')
+		let captions_read_child = process_fork(
+			'eavesdrop_child.js',
+			[
+				'--logging', log.level,
+				'--do', 'captions-read',
+				'--query', phrase
+			]
+		)
+		
+		console.log('waiting for child processes to have time to start...')
+		setTimeout(() => {
+			let children = {
+				captions_download: captions_download_child,
+				videos_details: videos_details_child,
+				captions_read: captions_read_child
+			}
+			
+			resolve(children)
+		}, 3000)
 	})
-	captions_read_child.on('exit', function(code,signal) {
-		log.info(`captions-read child exited with code ${code}, signal ${signal}`)
-	})
-	captions_read_child.on('error', function(err) {
-		log.error(err)
-		reject('eavesdrop_children.captions-read')
-	})
-	
-	return {
-		captions_list: captions_list_child,
-		videos_details: videos_details_child,
-		captions_read: captions_read_child
-	}
 }
 
 function eavesdrop() {
 	let api_client = new ApiClient()
 	
-	return new Promise(function(resolve) {
+	return new Promise(function(resolve,reject) {
 		ask('\ninput a phrase you\'d like to hear.\n')
 		.then(function(phrase) {
 			if (phrase) {
 				log.info('phrase = ' + phrase)
 				
+				// clear old results
+				results_clear_videos()
+				
 				// spawn child processes
-				let children = eavesdrop_children()
+				.then(() => {
+					return Promise.resolve(eavesdrop_children(phrase))
+				})
 				
-				// get video ids matching phrase
-				let page = undefined
-				let more_pages = true
-				let total_results = 0
-				let search_p = api_client.youtube_search(phrase)
-				
-				while (more_pages) {
-					search_p = search_p
-					.then(function(res) {
-						// res = {data,next_page,prev_page}
-						let num_results = res.data.items.length
-						total_results += num_results
-						log.debug(`got ${num_results} video ids for page ${page}`)
+				// eavesdrop
+				.then((children) => {
+					let captions_download_quit = false
+					let videos_details_quit = false
+					
+					// handle child process communication and events
+					children.captions_download.on('message', function(msg) {
+						log.debug('captions-download:' + JSON.stringify(msg))
 						
-						// pass video ids to captions-list
-						let video_ids = []
-						for (let id of res.data.items) {
-							video_ids.push(id.videoId)
+						if (msg.ttxt_path != undefined) {
+							log.debug('received downloaded timedtext path, passing to captions-read')
+							children.captions_read.send(msg)
 						}
-						
-						children.captions_list.send({
-							video_ids: video_ids
-						})
-						
-						// pass video ids to videos-details
-						
-						// captions-list will pass
-						
-						if (res.next_page && total_results < TOTAL_RESULTS_MAX) {
-							// advance to next results page
-							page = res.next_page
-						}
-						else {
-							// finish
-							log.info(`found ${total_results} candidate videos`)
-							more_pages = false
+						else if (msg.error != undefined) {
+							log.error('captions-download:' + msg.error)
 						}
 					})
-					.catch(function(err) {
+					children.captions_download.on('exit', function(code,signal) {
+						captions_download_quit = true
+						log.info(`captions-download child exited with code ${code}, signal ${signal}`)
+						
+						if (videos_details_quit) {
+							setTimeout(() => {
+								children.captions_read.send({
+									done: true
+								})
+								log.info('sent done message to captions-read')
+							}, 3000)
+						}
+					})
+					children.captions_download.on('error', function(err) {
 						log.error(err)
-						log.info(`skipping search results for page ${page}`)
-						more_pages = false
+						reject('eavesdrop_children.captions-download')
 					})
-				}
-				
-				// send "video ids search done" message to children
-				let done = {
-					done: true
-				}
-				children.captions_list.send(done)
-				children.videos_details.send(done)
-				
-				resolve()
+					
+					children.videos_details.on('message', function(msg) {
+						log.debug('videos-details:' + JSON.stringify(msg))
+						
+						if (msg.video_path != undefined) {
+							//should include video_id as well
+							log.debug('received video details path, passing to captions-read')
+							children.captions_read.send(msg)
+						}
+						else if (msg.error != undefined) {
+							log.error('video-details:' + msg.error)
+						}
+					})
+					children.videos_details.on('exit', function(code,signal) {
+						videos_details_quit = true
+						log.info(`videos-details child exited with code ${code}, signal ${signal}`)
+						
+						if (captions_download_quit) {
+							setTimeout(() => {
+								children.captions_read.send({
+									done: true
+								})
+								log.info('sent done message to captions-read')
+							}, 3000)
+						}
+					})
+					children.videos_details.on('error', function(err) {
+						log.error(err)
+						reject('eavesdrop_children.videos-details')
+					})
+					
+					let results_promises = []
+					children.captions_read.on('message', function(msg) {
+						log.debug('captions-read:' + JSON.stringify(msg))
+						
+						if (msg.video_embed != undefined) {
+							log.debug('received video result embed html, adding to results')
+							log.info(`adding video: ${msg.video_embed}`)
+							
+							let p = results_add_videos(msg.video_embed)
+							results_promises.push(p)
+						}
+						else if (msg.error != undefined) {
+							log.error('captions-read:' + msg.error)
+						}
+					})
+					children.captions_read.on('exit', function(code,signal) {
+						log.info(`captions-read child exited with code ${code}, signal ${signal}`)
+						
+						Promise.all(results_promises)
+						.catch(function(err) {
+							log.error(err)
+						})
+						.finally(function() {
+							log.info('eavesdrop search complete! showing results')
+							results_write()
+							.then(results_show)
+							.catch(function(err) {
+								log.error(err)
+								log.error('failed to commit and show results page')
+							})
+							.finally(resolve)
+						})
+					})
+					children.captions_read.on('error', function(err) {
+						log.error(err)
+						reject('eavesdrop_children.captions-read')
+					})
+					
+					// get video ids matching phrase
+					
+					let page = undefined
+					let more_pages = true
+					let total_results = 0
+					
+					function next_page(p) {
+						return new Promise((resolve_page) => {
+							p.then(function(res) {
+								// res = {data,next_page,prev_page}
+								let num_results = res.data.items.length
+								total_results += num_results
+								log.info(`got ${num_results} candidates for page ${page}`)
+								
+								// pass video ids to captions-list and video-details
+								let video_ids = []
+								for (let video_item of res.data.items) {
+									video_ids.push(video_item.id.videoId)
+								}
+								
+								/*
+								captions-download will create ttxt xml files and return filepaths, 
+								which will be passed to captions-read to determine if the phrase is 
+								spoken.
+								*/
+								children.captions_download.send({
+									video_ids: video_ids
+								})
+								
+								/*
+								videos-details will create video json files and return filepaths, 
+								which will be used by captions-read to create the video embed 
+								iframes.
+								*/
+								children.videos_details.send({
+									video_ids: video_ids
+								})
+								
+								if (res.next_page && total_results < TOTAL_RESULTS_MAX) {
+									// advance to next results page
+									page = res.next_page
+									
+									next_page(api_client.youtube_search(phrase,page))
+									.then(resolve_page)
+								}
+								else {
+									// finish
+									log.info(`found ${total_results} candidate videos`)
+									resolve_page()
+								}
+							})
+							.catch(function(err) {
+								log.error(err)
+								log.info(`skipping search results for page ${page}`)
+								resolve_page()
+							})
+						})
+					}
+					
+					function test_page() {
+						return new Promise(function(resolve) {
+							let video_ids = [
+								'kky36rS-4-k','UEzz7Sg_8mc','sN883IakPSw','t2zP7Zxb-iM',
+								'FRLmtH8JFEw','AExg1y740Os','MIwd505f0U8','HhdNScqy26c',
+								't8FanZG9paU','dE3UzmnpcvQ','dB2OG7UYu1k','ZVVgw8MUjyU',
+								'vr4klURswVg','Ud8c03yekq0','rWAnqhw4uyU','a276k-8z9HY',
+								'3cCFnSeleL0','UsLelSry2ng','iFHpBHGLs7M','FxseCMPrOkU',
+								'YGO-C8yRzhA','xW-_gvmDwTc','qljJuhzaabk','br4u3X7TOT4',
+								'MBK5Itkom5w'
+							]
+							
+							log.debug(`got ${video_ids.length} video ids for page TEST`)
+							
+							children.captions_download.send({
+								video_ids: video_ids
+							})
+							
+							children.videos_details.send({
+								video_ids: video_ids
+							})
+							
+							resolve()
+						})
+					}
+					
+					next_page(api_client.youtube_search(phrase,page))
+					//test_page()
+					.finally(() => {
+						// send "video ids search done" message to children
+						let done = {
+							done: true
+						}
+						
+						children.captions_download.send(done)
+						children.videos_details.send(done)
+						log.debug('sent done signal to captions-download and video-details')
+					})
+				})
 			}
 			else {
 				eavesdrop()
@@ -462,7 +629,8 @@ function main() {
 	try {
 		parse_cli_args()
 		
-		config()
+		init_filesystem()
+		.then(config)
 		.then(() => {
 			return init_translation(locale)
 		})
@@ -471,13 +639,16 @@ function main() {
 		})
 		.catch(function(e) {
 			log.error(e)
-		
+			
 			if (e instanceof String) {
 				if (e.startsWith('eavesdrop.config')) {
 					log.error('failed to read from config file')
 				}
 				else if (e.startsWith('io')) {
 					log.error('failed to initialize translation module')
+				}
+				else if (e.startsWith('util.init_filesystem')) {
+					log.error('failed to initialize filesystem')
 				}
 				else {
 					log.error('unknown error')
@@ -499,19 +670,14 @@ function main() {
 			.finally(function() {
 				if (do_tests) {
 					tests()
-					.then(function() {
-						log.info('all tests passed')
+					.then(function(num_successes) {
+						log.info(`all ${num_successes} tests passed`)
 			
 						eavesdrop()
 						.finally(finish)
 					})
-					.catch(function(failures) {
-						if (failures.length instanceof Array) {
-							log.error(`${failures.length} tests failed: ${failures}`)
-						}
-						else {
-							log.error(`one test failed: ${failures}`)
-						}
+					.catch(function(num_failures) {
+						log.error(`${num_failures} tests failed`)
 				
 						finish()
 					})

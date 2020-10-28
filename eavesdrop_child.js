@@ -10,13 +10,16 @@ Owen Gallagher
 import debug from 'debug'
 import cli_args from 'command-line-args'
 import os_locale from 'os-locale'
+import fs from 'fs'
 
 // local imports
 
 import {
 	PROGRAM_NAME,
 	set_program_name,
-	TEMP_DIR_PATH
+	TEMP_DIR_PATH,
+	VIDEO_PATH_PREFIX,
+	JSON_FILETYPE
 } from './consts.js'
 
 import Logger from './logger.js'
@@ -24,6 +27,7 @@ import Logger from './logger.js'
 import {
 	init_loggers,
 	get_config,
+	reduce_video_details,
 	finish as finish_util
 } from './util.js'
 
@@ -32,12 +36,25 @@ import {
 	ApiClient
 } from './api_client.js'
 
+import {
+	CaptionsReader
+} from './read_captions.js'
+
+import {
+	compile_video_embed
+} from './results.js'
+
 // constants
 
 const NAME = PROGRAM_NAME + ':child'
 const log = new Logger(NAME)
 const is_child = (typeof process.send == 'function')
-let language = os_locale().substring(0,2)
+
+let language = 'en'
+os_locale()
+.then((locale) => {
+	language = locale.substring(0,2)
+})
 
 const cli_args_api = [
 	{
@@ -57,15 +74,27 @@ const cli_args_api = [
 		alias: 'h',
 		type: Boolean,
 		defaultValue: false
+	},
+	{
+		name: 'query',
+		alias: 'q',
+		type: String,
+		defaultValue: ''
 	}
 ]
 
 // variables
 
 let tasks = []
-let messages = []
+let task_args = {}
 
 // methods
+
+if (process.send == undefined) {
+	process.send = function(arg) {
+		log.info(`process.send(${JSON.stringify(arg)}) ignored`)
+	}
+}
 
 function show_help() {
 	console.log(`\
@@ -81,10 +110,13 @@ parent process.
 			help
 			test-parallel
 			test-message
-			captions-list-download
+			captions-download
 			captions-read
 			videos-details
 		]
+		
+	(-q | --query) <query>=\'\'
+		<query> = search terms for captions-read
 	`)
 }
 
@@ -111,6 +143,9 @@ function parse_cli_args() {
 		else {
 			tasks = options.do.split(',')
 		}
+		
+		//task-specific arguments
+		task_args.query = options.query
 		
 		log.info('will do tasks: ' + tasks)
 	}
@@ -143,6 +178,7 @@ function test_parallel() {
 	}
 }
 
+// test_message() not finished
 function test_message() {
 	return new Promise(function(resolve,reject) {
 		let pid = process.pid
@@ -173,11 +209,7 @@ function test_message() {
 	})
 }
 
-function on_message(msg) {
-	log.info('received message from parent: ' + msg)
-	messages.push(new String(msg).toString())
-}
-
+// get_reply() not finished
 function get_reply(timeout=5000) {
 	return new Promise(function(resolve,reject) {
 		let found_reply = false
@@ -199,84 +231,87 @@ function get_reply(timeout=5000) {
 	})
 }
 
-function captions_list_download() {
-	return new Promise(function(resolve,reject) {
+function captions_download() {
+	return new Promise(function(resolve,reject) {	
 		init_api_client()
 		.then(() => {
 			log.debug('initialized api_client module')
 			let api_client = new ApiClient()
-			go = true
+			
+			let done = false
+			let idle = false
 			
 			// get video_id
 			process.on('message', function(msg) {
 				if (msg.video_ids != undefined) {
+					idle = false
+					
 					// get captions
 					let promises = []
-					
 					for (let video_id of msg.video_ids) {
-						let p = api_client.youtube_captions_list(video_id)
-						.then(function(data) {
-							let num_results = data.items.length
-							log.debug(`fetched ${num_results} captions`)
+						let p = api_client.youtube_timedtext_download(video_id)
+						.then(function(ttxt_path) {
+							log.info(`downloaded timedtext to ${ttxt_path}`)
 							
-							if (num_results > 0) {
-								// pick best captions
-								let best_captions = data.items[0]
-								let best_lang = best_captions.snippet.language
-								let best_kind = best_captions.snippet.trackKind
-								for (let i=1; i<num_results; i++) {
-									let captions = data.items[i]
-									let lang = captions.snippet.language
-									let kind = captions.snippet.trackKind
-									
-									if ((best_lang != language && lang == language) || 
-										(best_kind != kind && kind == 'standard')) {
-										best_captions = captions
-										best_lang = lang
-									}
+							if (ttxt_path) {
+								// send finished video to parent process
+								let result = {
+									ttxt_path: ttxt_path,
+									video_id: video_id
 								}
 								
-								// download captions
-								return api_client.youtube_captions_download(best_captions.id,video_id)
-								.then(function(path) {
-									log.debug(`downloaded captions for ${best_captions.id}`)
-								})
-								.catch(function(err) {
-									log.error(err)
-									log.error(`failed to download captions for ${best_captions.id}`)
-								})
-								.finally(function() {
-									return Promise.resolve()
-								})
+								process.send(result)
 							}
 							else {
-								return Promise.reject(video_id)
+								process.send('error:captions_download.path')
 							}
 						})
 						.catch(function(err) {
-							return Promise.reject(video_id)
+							let out = `failed to get timedtext for ${video_id}`
+							log.error(out)
+							process.send(out)
+							process.send(err)
+						})
+						.finally(() => {
+							return Promise.resolve()
 						})
 						
 						promises.push(p)
 					}
 					
 					Promise.all(promises)
-					.catch(function(video_ids) {
-						log.error(`failed to get captions for ${video_ids}`)
-					})
 					.finally(function() {
-						log.info(`captions download to ${TEMP_DIR_PATH} complete`)
+						log.info(`timedtext download to ${TEMP_DIR_PATH} complete for ${msg.video_ids}`)
+						
+						if (done) {
+							resolve()
+						}
+						else {
+							idle = true
+						}
 					})
+					process.send('video_ids ' + msg.video_ids.join(',') + ' received')
 				}
-				else if (message.done) {
-					go = false
+				else if (msg.done) {
+					log.info('no more captions to download')
+					process.send('quitting when done')
+					
+					if (idle) {
+						resolve()
+					}
+					else {
+						done = true
+					}
+				}
+				else {
+					process.send(`message ${JSON.stringify(msg)} not understood`)
 				}
 			})
 		})
 		.catch(function(err) {
 			log.error(err)
 			log.error('failed to initialize api client')
-			reject('captions_list_download.api')
+			reject('captions_download.api')
 		})
 	})
 }
@@ -287,7 +322,102 @@ function videos_details() {
 		.then(() => {
 			log.debug('initialized api_client module')
 			let api_client = new ApiClient()
-			reject('videos_details.undefined')
+			
+			let done = false //true for testing
+			let idle = false
+			
+			// // for testing
+			// let msg = {
+			// 	video_ids: ['iFHpBHGLs7M','FxseCMPrOkU','YGO-C8yRzhA','xW-_gvmDwTc','qljJuhzaabk']
+			// }
+			
+			// get video ids
+			
+			process.on('message', function(msg) {
+				if (msg.video_ids != undefined) {
+					idle = false
+					process.send('video_ids received: ' + msg.video_ids.join(','))
+					
+					api_client.youtube_videos_list(msg.video_ids)
+					.then(function(res) {
+						let fs_write_promises = []
+						
+						for (let video_item of res.data.items) {
+							// write video to file
+							let video = reduce_video_details(video_item)
+							let video_id = video.id
+							let video_path = VIDEO_PATH_PREFIX + video_id + '.' + JSON_FILETYPE
+							
+							// stringify video
+							video = JSON.stringify(video, null, '\t')
+							
+							let fs_write_promise = new Promise(function(fs_resolve) {
+								fs.writeFile(video_path, video, function(err) {
+									if (err) {
+										log.error('failed to write to ' + video_path)
+										process.send('error:fs.write for ' + video_id)
+									}
+									else {
+										log.info('saved video details in ' + video_path)
+									
+										// send vido file to parent process
+										process.send({
+											video_path: video_path,
+											video_id: video_id
+										})
+									}
+									
+									fs_resolve()
+								})
+							})
+							
+							fs_write_promises.push(fs_write_promise)
+						}
+						
+						Promise.all(fs_write_promises)
+						.catch(function(err) {
+							log.error(err)
+							process.send('error:' + err)
+						})
+						.finally(() => {
+							log.info('finished downloading details for ' + msg.video_ids.join(','))
+						
+							if (done) {
+								process.send('quitting')
+								resolve()
+							}
+							else {
+								idle = true
+							}
+						})
+					})
+					.catch(function(err) {
+						log.error(err)
+						log.error('failed to download videos for ids ' + msg.video_ids.join(','))
+						process.send('error:' + err)
+					})
+				}
+				else if (msg.done) {
+					log.info('no more videos to download')
+					process.send('quitting when done')
+					
+					// wait to set kill signal while communications catch up
+					// setTimeout(() => {
+						if (idle) {
+							process.send('quitting')
+							resolve()
+						}
+						else {
+							done = true
+						}
+					// }, 10000)
+				}
+				else {
+					let out = 'unknown message ' + JSON.stringify(msg)
+					log.error(out)
+					process.send('error:' + out)
+				}
+			})
 		})
 		.catch(function(err) {
 			log.error(err)
@@ -299,20 +429,153 @@ function videos_details() {
 
 function captions_read() {
 	return new Promise(function(resolve,reject) {
-		reject('captions_read.undefined')
+		log.debug('initialized captions-read eavesdrop child')
+		log.info(`search terms = ${task_args.query}`)
+		
+		// {video_id: {video_path:, start_sec:}, ...}
+		let idle_video = false
+		let idle_start = false
+		let done = false
+		let results = {}
+		
+		function try_compile_result(result) {
+			return new Promise(function(resolve_compile) {
+				if (result.video_path !== undefined && result.start_sec !== undefined) {
+					log.info(`ready to compile ${result.video_path} embed starting at ${result.start_sec}`)
+					
+					if (result.start_sec == -1) {
+						log.info(result.video_path + ' is not a result')
+						resolve_compile()
+					}
+					else {
+						fs.readFile(result.video_path, 'utf-8', function(err, data) {
+							compile_video_embed(JSON.parse(data), result.start_sec)
+							.then(function(video_embed) {
+								log.debug('sent video embed ' + video_embed)
+								process.send({
+									video_embed: video_embed
+								})
+							})
+							.catch(function(err) {
+								log.error(err)
+								process.send('error:' + err)
+							})
+							.finally(resolve_compile)
+						})
+					}
+				}
+				else {
+					resolve_compile()
+				}
+			})
+		}
+		
+		function add_video_path(video_id, video_path) {
+			return new Promise(function(resolve_add_path) {
+				if (results[video_id] == undefined) {
+					results[video_id] = {}
+				}
+			
+				results[video_id].video_path = video_path
+			
+				try_compile_result(results[video_id])
+				.then(resolve_add_path)
+			})
+		}
+		
+		function add_start_sec(video_id, start_sec) {
+			return new Promise(function(resolve_add_start) {
+				if (results[video_id] == undefined) {
+					results[video_id] = {}
+				}
+			
+				results[video_id].start_sec = start_sec
+			
+				try_compile_result(results[video_id])
+				.then(resolve_add_start)
+			})
+		}
+		
+		let reader = new CaptionsReader(task_args.query)
+		
+		process.on('message', function(msg) {
+			if (msg.video_path != undefined) {
+				idle_video = false
+				log.info(`received video file path ${msg.video_path} with embed html`)
+				
+				add_video_path(msg.video_id, msg.video_path)
+				.finally(() => {
+					if (done && idle_start) {
+						process.send('quitting')
+						resolve()
+					}
+					else {
+						idle_video = true
+					}
+				})
+			}
+			else if (msg.ttxt_path != undefined) {
+				idle_start = false
+				log.info(`received timedtext file path ${msg.ttxt_path} to read for search terms`)
+				
+				reader.find_query(msg.ttxt_path)
+				.then(function(start_sec) {
+					if (start_sec == -1) {
+						log.warning(`query not found in ${msg.ttxt_path}`)
+					}
+					else {
+						let out = `found query in ${msg.ttxt_path} at start=${start_sec}`
+						log.info(out)
+						process.send(out)
+					}
+					
+					return add_start_sec(msg.video_id, start_sec)
+				})
+				.catch(function(err) {
+					log.error(`failed to search for query in ${msg.ttxt_path}`)
+					return add_start_sec(msg.video_id, -1)
+				})
+				.finally(() => {
+					if (done && idle_video) {
+						process.send('quitting')
+						resolve()
+					}
+					else {
+						idle_start = true
+					}
+				})
+			}
+			else if (msg.done) {
+				log.info('searching the last captions')
+				
+				// wait to set kill signal while communications catch up
+				setTimeout(() => {
+					if (idle_video && idle_start) {
+						process.send('quitting')
+						resolve()
+					}
+					else {
+						done = true
+					}
+				}, 3000)
+			}
+			else {
+				let out = `message ${JSON.stringify(msg)} not understood`
+				log.error(out)
+				process.send('error:' + out)
+			}
+		})
 	})
 }
 
 function main() {
 	parse_cli_args()
-	
-	// process.on('message', on_message)
-	
+
 	let promises = []
-	
+
 	for (let task of tasks) {
 		log.info('performing ' + task)
-		
+	
 		let p
 		if (task == 'help') {
 			p = show_help()
@@ -323,8 +586,8 @@ function main() {
 		else if (task == 'test-message') {
 			p = test_message()
 		}
-		else if (task == 'captions-list-download') {
-			p = captions_list_download()
+		else if (task == 'captions-download') {
+			p = captions_download()
 		}
 		else if (task == 'captions-read') {
 			p = captions_read()
@@ -332,32 +595,27 @@ function main() {
 		else if (task == 'videos-details') {
 			p = videos_details()
 		}
-		
+	
 		if (p instanceof Promise) {
 			promises.push(p)
 		}
 	}
-	
+
 	Promise.all(promises)
-	.then(() => {
-		log.info('all tasks complete')
-		
-		process.exit(0)
-	})
 	.catch(function(err) {
-		if (err instanceof Array) {
-			log.error(`${err.length} errors failed`)
-			log.error(err)
-		}
-		else {
-			log.error(err)
-		}
-		
-		process.exit(1)
+		log.error(err)
+		process.send({
+			error: err
+		})
+	})
+	.finally(() => {
+		log.info('all tasks complete')
+		finish_util()
+		process.exit()
 	})
 }
 
-// main / exports
+// main / default export
 
 if (process.argv.length > 1 && process.argv[1].endsWith('eavesdrop_child.js')) {
 	main()

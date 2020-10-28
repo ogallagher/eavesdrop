@@ -23,7 +23,9 @@ import {
 import {
 	PROGRAM_NAME,
 	OS_NAME,
-	VIDEO_PLAYER_PATH
+	VIDEO_PLAYER_PATH,
+	URL_QUERY_PREFIX,
+	VIDEO_BEFORE_START
 } from './consts.js'
 
 import Logger from './logger.js'
@@ -156,5 +158,36 @@ export function add_videos(videos) {
 		.catch(function(err) {
 			reject(err)
 		})
+	})
+}
+
+export function compile_video_embed(video, start_second) {
+	return new Promise(function(resolve,reject) {
+		try {
+			let video_embed = html_parse(video.embed_html).firstChild
+			
+			start_second = Math.floor(start_second - VIDEO_BEFORE_START)
+			if (start_second < 0) {
+				start_second = 0
+			}
+			
+			let url = 
+			video_embed.getAttribute('src') + 
+			URL_QUERY_PREFIX + 'start=' + 
+			start_second
+			
+			if (url.startsWith('//')) {
+				//add protocol prefix
+				url = 'https:' + url
+			}
+			
+			video_embed.setAttribute('src',url)
+			
+			resolve(video_embed.toString())
+		}
+		catch (err) {
+			log.error(err)
+			reject('results.compile_video_embed')
+		}
 	})
 }

@@ -16,7 +16,8 @@ import {
 	CONFIG_PATH,
 	CLI,
 	CMD_PREFIX,
-	RESOURCES_DIR_PATH
+	RESOURCES_DIR_PATH,
+	TEMP_DIR_PATH
 } from './consts.js'
 
 import Logger from './logger.js'
@@ -61,6 +62,35 @@ export function init_loggers(logging_level) {
 	results_log.enable(logging_level)
 	read_captions_log.enable(logging_level)
 	eavesdrop_log.enable(logging_level)
+}
+
+export function init_filesystem() {
+	return new Promise(function(resolve,reject) {
+		//make sure temp dir exists
+		fs.mkdir(TEMP_DIR_PATH, function(err,data) {
+			let dir_exists = true
+			
+			if (err) {
+				if (err.code == 'EEXIST') {
+					log.debug('temp dir exists')
+				}
+				else {
+					dir_exists = false
+					log.error('failed to create temp dir at ' + TEMP_DIR_PATH)
+				}
+			}
+			else {
+				log.info('created temp dir at ' + TEMP_DIR_PATH)
+			}
+			
+			if (dir_exists) {
+				resolve()
+			}
+			else {
+				reject('util.init_filesystem.temp')
+			}
+		})
+	})
 }
 
 export function get_config() {
@@ -156,4 +186,23 @@ export function dummy_fin() {
 export function dummy_call(callback) {
 	log.debug('call dummy, then callback')
 	callback()
+}
+
+export function reduce_video_details(details) {
+	try {
+		let summary = {
+			id: details.id,
+			title: details.snippet.title,
+			tags: details.snippet.tags,
+			caption: details.contentDetails.caption == 'true',
+			embed_html: details.player.embedHtml
+		}
+		
+		return summary
+	}
+	catch (err) {
+		log.error('failed to parse video details from ' + JSON.stringify(details))
+		log.error(err)
+		return details
+	}
 }

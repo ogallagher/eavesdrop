@@ -144,7 +144,7 @@ export function ApiClient() {
 		auth: youtube_api_key
 	})
 	
-	this.search_results_max = 25 //0 to 50; 25 is medium
+	this.search_results_max = 50 //0 to 50; 25 is medium
 }
 
 ApiClient.prototype.youtube_search = function(query, page_token) {
@@ -153,17 +153,23 @@ ApiClient.prototype.youtube_search = function(query, page_token) {
 	return new Promise(function(resolve,reject) {
 		log.debug(`performing ApiClient.youtube_search from page ${page_token}`)
 		
-		youtube_api_usage += APIU_YTB_SEARCH
-		self.youtube.search.list({
+		let options = {
 			part: 'id',
 			q: query,
 			type: 'video',
 			videoCaption: 'closedCaption',
-			maxResults: self.search_results_max,
-			pageToken: page_token
-		})
+			maxResults: self.search_results_max
+		}
+		
+		if (page_token) {
+			options.pageToken = page_token
+		}
+		
+		youtube_api_usage += APIU_YTB_SEARCH
+		self.youtube.search.list(options)
 		.then(function(res) {
 			if (res.status == HTTP_STATUS_OK) {
+				log.debug('youtube_search finished; returning results')
 				resolve({
 					data: res.data,
 					next_page: res.data.nextPageToken,
@@ -183,17 +189,18 @@ ApiClient.prototype.youtube_search = function(query, page_token) {
 	})
 }
 
-ApiClient.prototype.youtube_videos_list = function(video_ids) {
+ApiClient.prototype.youtube_videos_list = function(video_ids, page_token) {
 	let self = this
 	
 	return new Promise(function(resolve,reject) {
-		log.debug(`performing ApiClient.youtube_videos_list for ${video_ids}`)
+		log.debug(`performing ApiClient.youtube_videos_list for ${video_ids} from page ${page_token}`)
 		
 		if (video_ids instanceof Array) {
 			youtube_api_usage += APIU_YTB_VIDEOS_LIST
 			self.youtube.videos.list({
 				part: 'id,snippet,player,contentDetails',
-				id: video_ids.join(',')
+				id: video_ids.join(','),
+				pageToken: page_token
 			})
 			.then(function(res) {
 				if (res.status == HTTP_STATUS_OK) {
@@ -255,10 +262,10 @@ ApiClient.prototype.youtube_timedtext_download = function(video_id) {
 					video_info = JSON.parse(video_info.substring(
 						captions_info_start,captions_info_end))
 					
-					if (video_info.playabilityStatus.status == 'OK') {
+					if (video_info.playabilityStatus.status == 'OK' && video_info.captions != undefined) {
 						// extract captions info from video info
 						let captions_info = video_info.captions.playerCaptionsTracklistRenderer
-					
+						
 						// remove video_info from memory
 						video_info = null
 					
@@ -266,7 +273,7 @@ ApiClient.prototype.youtube_timedtext_download = function(video_id) {
 						let ttxt_url = ttxt_info.baseUrl
 						let language = get_language()
 						let available = true
-					
+						
 						log.debug(`original timedtext language = ${ttxt_info.languageCode}`)
 						if (ttxt_info.languageCode.substring(0,2) != language) {
 							// will need to request translated timedtext
@@ -278,22 +285,23 @@ ApiClient.prototype.youtube_timedtext_download = function(video_id) {
 								//
 								// log.debug(`requesting translated timedtext to ${language}`)
 								log.error('translation of timedtext is not implemented')
-								reject('api_client.youtube_timedtext_download.ttxt.translate')
+								//reject('api_client.youtube_timedtext_download.ttxt.translate')
 							}
 							else {
 								available = false
 							}
 						}
-					
+						
 						if (available) {
 							let ttxt_path = `${TIMEDTEXT_PATH_PREFIX}${video_id}.${TIMEDTEXT_FILETYPE}`
-						
+							
 							//download timedtext file
 							request
 							.get(ttxt_url)
-							//.pipe(new TimedTextCleaner())
+							.pipe(new TimedTextCleaner())
 							.pipe(fs.createWriteStream(ttxt_path))
 							.on('finish', () => {
+								log.info('downloaded to ' + ttxt_path)
 								resolve(ttxt_path)
 							})
 							.on('error', function(err) {

@@ -1,6 +1,6 @@
 {
 	"api_usage": {
-		"youtube": 1002
+		"youtube": 7710
 	},
 	"constants": {
 		"PROGRAM_NAME": "eavesdropper",
@@ -18,6 +18,7 @@
 		"API_QUOTA_YOUTUBE": 10000,
 		"APIU_YTB_SEARCH": 100,
 		"APIU_YTB_CAPTIONS_LIST": 50,
-		"APIU_YTB_CAPTIONS_DOWNLOAD": 200
+		"APIU_YTB_CAPTIONS_DOWNLOAD": 200,
+		"TOTAL_RESULTS_MAX": 150
 	}
 }

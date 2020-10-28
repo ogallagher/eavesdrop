@@ -17,11 +17,17 @@ import request from 'request'
 
 import { 
 	TEST_DIR_PATH,
-	PROGRAM_NAME
+	PROGRAM_NAME,
+	TEMP_DIR_PATH,
+	VIDEO_PATH_PREFIX,
+	TIMEDTEXT_PATH_PREFIX,
+	JSON_FILETYPE,
+	TIMEDTEXT_FILETYPE
 } from './consts.js'
 
 import {
-	dummy_call
+	dummy_call,
+	reduce_video_details
 } from './util.js'
 
 import Logger from './logger.js'
@@ -39,7 +45,12 @@ import {
 	add_videos as results_add_videos,
 	write as results_write,
 	show as results_show,
+	compile_video_embed
 } from './results.js'
+
+import {
+	CaptionsReader
+} from './read_captions.js'
 
 // constants
 
@@ -321,11 +332,33 @@ export function test_api_youtube_videos() {
 		.then(function(res) {
 			log.info(`fetched ${res.data.items.length} videos`)
 			
+			let promises = []
+			
 			for (let video of res.data.items) {
+				video = reduce_video_details(video)
 				log.debug(video)
+				
+				let video_path = VIDEO_PATH_PREFIX + video.id + '.' + JSON_FILETYPE
+				
+				let p = new Promise(function(resolve) {
+					fs.writeFile(video_path, JSON.stringify(video,null,'\t'), function(err) {
+						if (err) {
+							log.error('failed to write to ' + video_path)
+						}
+						else {
+							log.info('saved video details in ' + video_path)
+						}
+						resolve()
+					})
+				})
+				
+				promises.push(p)
 			}
 			
-			resolve()
+			Promise.all(promises)
+			.finally(() => {
+				resolve()
+			})
 		})
 		.catch(function(err) {
 			log.error(`test_api_youtube_videos: ${err}`)
@@ -397,14 +430,20 @@ export function test_api_youtube_timedtext_download() {
 	return new Promise(function(resolve,reject) {
 		let api_client = new ApiClient()
 		
-		let video_ids = ['UelDrZ1aFeY','Xl-BNTeJXjw','MZ3Vh8jZFdE','zVO5xTAbxm8']
+		let video_ids = [
+			// 'kky36rS-4-k','UEzz7Sg_8mc','sN883IakPSw','t2zP7Zxb-iM','FRLmtH8JFEw','AExg1y740Os',
+			// 'MIwd505f0U8','HhdNScqy26c','t8FanZG9paU','dE3UzmnpcvQ','dB2OG7UYu1k','ZVVgw8MUjyU',
+			// 'vr4klURswVg','Ud8c03yekq0','rWAnqhw4uyU','a276k-8z9HY','3cCFnSeleL0','UsLelSry2ng',
+			'iFHpBHGLs7M','FxseCMPrOkU','YGO-C8yRzhA','xW-_gvmDwTc','qljJuhzaabk','br4u3X7TOT4',
+			'MBK5Itkom5w'
+		]
 		let video_id = video_ids[0]
 		let downloads = 0
 		let p = api_client.youtube_timedtext_download(video_id)
 		for (let i=1; i<video_ids.length; i++) {
 			p = p
-			.then(function(path) {
-				log.info(`timedtext downloaded to ${path}`)
+			.then(function(ttxt_path) {
+				log.info(`timedtext downloaded to ${ttxt_path}`)
 				downloads++
 			})
 			.catch(function(err) {
@@ -415,8 +454,8 @@ export function test_api_youtube_timedtext_download() {
 			})
 		}
 		
-		p.then(function(path) {
-			log.info(`timedtext downloaded to ${path}`)
+		p.then(function(ttxt_path) {
+			log.info(`timedtext downloaded to ${ttxt_path}`)
 			downloads++
 		})
 		.catch(function(err) {
@@ -524,6 +563,86 @@ export function test_promise_assign_outer(do_resolve=true) {
 			else {
 				reject('tests.promise_assign_outer')
 			}
+		})
+	})
+}
+
+export function test_captions_reader() {
+	return new Promise(function(resolve,reject) {
+		let captions_path = TEMP_DIR_PATH + 'timedtext_zVO5xTAbxm8.xml'
+		let query = 'possessed by'
+		
+		log.info('testing CaptionsReader.find_query')
+		
+		let captions_reader = new CaptionsReader(query)
+		
+		captions_reader
+		.find_query(captions_path)
+		.then(function(start_sec) {
+			log.info(`found query at start=${start_sec}`)
+			resolve()
+		})
+		.catch(function(err) {
+			log.error('CaptionsReader.find_query failed: ' + err)
+			reject('test.captions_reader')
+		})
+	})
+}
+
+export function test_eavesdrop_results() {
+	return new Promise(function(resolve,reject) {
+		let video_id = 'zVO5xTAbxm8'
+		let video_path = VIDEO_PATH_PREFIX + video_id + '.' + JSON_FILETYPE
+		let ttxt_path = TIMEDTEXT_PATH_PREFIX + video_id + '.' + TIMEDTEXT_FILETYPE
+		let query = 'possessed by'
+		
+		log.info(`finding ${query} in ${video_id}`)
+		new CaptionsReader(query)
+		.find_query(ttxt_path)
+		.then(function(start_sec) {
+			if (start_sec == -1) {
+				log.error('query not found')
+				reject('text.eavesdrop_results.search')
+			}
+			else {
+				log.info('testing compilation of start-second and video embed into results page')
+				
+				results_clear_videos()
+				.then(() => {
+					return new Promise(function(resolve,reject) {
+						fs.readFile(video_path, 'utf-8', function(err,video) {
+							if (err) {
+								log.error(err)
+								reject('test.eavesdrop_results.fs')
+							}
+							else {
+								compile_video_embed(JSON.parse(video), start_sec)
+								.then(function(embed_html) {
+									resolve(embed_html)
+								})
+								.catch(function(err) {
+									reject(err)
+								})
+							}
+						})
+					})
+				})
+				.then(function(embed_html) {
+					log.info('adding ' + video_id + ' to results page')
+					return results_add_videos(embed_html)
+				})
+				.then(results_write)
+				.then(results_show)
+				.then(resolve)
+				.catch(function(err) {
+					log.error(err)
+					reject('test.eavesdrop_results.compile')
+				})
+			}
+		})
+		.catch(function(err) {
+			log.error('failed to search video timedtext for query')
+			reject('text.eavesdrop_results.reader')
 		})
 	})
 }

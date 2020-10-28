@@ -111,7 +111,11 @@ export function ask(question, commandable=true) {
 
 export function get_language() {
 	let locale = i18n.getLocale()
-	return locale.substring(0,2)
+	if (locale == undefined) {
+		//can happen if i18n is not configured with init_translation
+		locale = 'en-US'
+	}
+ 	return locale.substring(0,2)
 }
 
 export function translate(statement,constants,locale) {
