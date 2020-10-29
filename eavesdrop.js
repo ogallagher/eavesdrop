@@ -21,6 +21,7 @@ import {
 
 import { 
 	PROGRAM_NAME,
+	OS_NAME,
 	LOG_LEVEL,
 	TOTAL_RESULTS_MAX,
 	config as config_consts 
@@ -356,6 +357,11 @@ function tests() {
 function eavesdrop_children(phrase) {
 	return new Promise(function(resolve,reject) {
 		log.info('launching eavesdrop child processes')
+		
+		let fork_options = {}
+		if (OS_NAME == 'win') {
+			fork_options.shell = true
+		}
 	
 		log.debug('launching captions download child')
 		let captions_download_child = process_fork(
@@ -363,7 +369,8 @@ function eavesdrop_children(phrase) {
 			[
 				'--logging', log.level, 
 				'--do', 'captions-download'
-			]
+			],
+			fork_options
 		)
 	
 		log.debug('launching videos details child')
@@ -372,7 +379,8 @@ function eavesdrop_children(phrase) {
 			[
 				'--logging', log.level,
 				'--do', 'videos-details'
-			]
+			],
+			fork_options
 		)
 		
 		log.debug('launching captions read child')
@@ -382,7 +390,8 @@ function eavesdrop_children(phrase) {
 				'--logging', log.level,
 				'--do', 'captions-read',
 				'--query', phrase
-			]
+			],
+			fork_options
 		)
 		
 		console.log(translate('waiting for child processes to have time to start...'))

@@ -17,7 +17,8 @@ import {
 	CLI,
 	CMD_PREFIX,
 	RESOURCES_DIR_PATH,
-	TEMP_DIR_PATH
+	TEMP_DIR_PATH,
+	USER_RESULTS_DIR_PATH
 } from './consts.js'
 
 import Logger from './logger.js'
@@ -67,28 +68,66 @@ export function init_loggers(logging_level) {
 export function init_filesystem() {
 	return new Promise(function(resolve,reject) {
 		//make sure temp dir exists
-		fs.mkdir(TEMP_DIR_PATH, function(err,data) {
-			let dir_exists = true
-			
-			if (err) {
-				if (err.code == 'EEXIST') {
-					log.debug('temp dir exists')
+		let promises = []
+		let p
+		p = new Promise(function(temp_resolve,temp_reject) {
+			fs.mkdir(TEMP_DIR_PATH, function(err,data) {
+				let dir_exists = true
+				
+				if (err) {
+					if (err.code == 'EEXIST') {
+						log.debug('temp dir exists')
+					}
+					else {
+						dir_exists = false
+						log.error('failed to create temp dir at ' + TEMP_DIR_PATH)
+					}
 				}
 				else {
-					dir_exists = false
-					log.error('failed to create temp dir at ' + TEMP_DIR_PATH)
+					log.info('created temp dir at ' + TEMP_DIR_PATH)
 				}
-			}
-			else {
-				log.info('created temp dir at ' + TEMP_DIR_PATH)
-			}
-			
-			if (dir_exists) {
-				resolve()
-			}
-			else {
-				reject('util.init_filesystem.temp')
-			}
+				
+				if (dir_exists) {
+					temp_resolve()
+				}
+				else {
+					temp_reject('util.init_filesystem.temp')
+				}
+			})
+		})
+		promises.push(p)
+		
+		p = new Promise(function(usr_resolve,usr_reject) {
+			fs.mkdir(USER_RESULTS_DIR_PATH, function(err,data) {
+				let dir_exists = true
+				
+				if (err) {
+					if (err.code == 'EEXIST') {
+						log.debug('user results dir exists')
+					}
+					else {
+						dir_exists = false
+						log.error('failed to create user results dir at ' + USER_RESULTS_DIR_PATH)
+					}
+				}
+				else {
+					log.info('created user results dir at ' + USER_RESULTS_DIR_PATH)
+				}
+				
+				if (dir_exists) {
+					usr_resolve()
+				}
+				else {
+					usr_reject('util.init_filesystem.user_results')
+				}
+			})
+		})
+		promises.push(p)
+		
+		Promise.all(promises)
+		.then(resolve)
+		.catch(function(err) {
+			reject(err)
 		})
 	})
 }
