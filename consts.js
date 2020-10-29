@@ -73,6 +73,7 @@ export let TTXT_REGEX_ESCAPE = /&[^;]+;/g
 export let CAPTION_SEARCH_FOUND = 'EV[found_query]'
 
 export let HTTP_STATUS_OK = 200
+export let HTTP_STATUS_THROTTLE = 429
 
 export let VIDEO_HEIGHT = 200
 export let VIDEO_BEFORE_START = 2
@@ -84,6 +85,8 @@ export let APIU_YTB_CAPTIONS_LIST = 50
 export let APIU_YTB_CAPTIONS_DOWNLOAD = 200
 
 export let TOTAL_RESULTS_MAX = 50
+
+export let REQUEST_DELAY_STEP = 50 //milliseconds
 
 // constants
 

@@ -17,6 +17,7 @@ import {
 	PROGRAM_NAME,
 	CREDENTIALS_PATH,
 	HTTP_STATUS_OK,
+	HTTP_STATUS_THROTTLE,
 	API_QUOTA_YOUTUBE,
 	APIU_YTB_SEARCH,
 	APIU_YTB_VIDEOS_LIST,
@@ -240,8 +241,14 @@ ApiClient.prototype.youtube_timedtext_download = function(video_id) {
 		function (err, res, body) {
 			if (err || res.statusCode != 200) {
 				log.error('youtube video info request error')
-				log.error(err)
-				reject('api_client.youtube_timedtext_download.video.http')
+				log.error(`${res.statusCode}:${res.statusMessage}`)
+				
+				if (res.statusCode == HTTP_STATUS_THROTTLE) {
+					reject('api_client.youtube_timedtext_download.video.throttle')
+				}
+				else {
+					reject('api_client.youtube_timedtext_download.video.http')
+				}
 			}
 			else {
 				// isolate video info json

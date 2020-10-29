@@ -446,7 +446,31 @@ input a search query to use for identifying video candidates
 					.then((children) => {
 						let captions_download_quit = false
 						let videos_details_quit = false
-
+						
+						// will be set to stop_last_child interval on call
+						let stopper_interval = null
+						
+						function stop_last_child() {
+							setTimeout(() => {
+								try {
+									children.captions_read.send({
+										done: true
+									})
+									log.info('sent done message to captions-read')
+								}
+								catch (e) {
+									log.error('cannot send messages to captions-read after close')
+									clearInterval(stopper_interval)
+								}
+								
+							}, 2000)
+							
+							// continue requesting quit if child refuses
+							if (stopper_interval == null) {
+								stopper_interval = setInterval(stop_last_child, 5000)
+							}
+						}
+						
 						// handle child process communication and events
 						children.captions_download.on('message', function(msg) {
 							log.debug('captions-download:' + JSON.stringify(msg))
@@ -464,12 +488,7 @@ input a search query to use for identifying video candidates
 							log.info(`captions-download child exited with code ${code}, signal ${signal}`)
 
 							if (videos_details_quit) {
-								setTimeout(() => {
-									children.captions_read.send({
-										done: true
-									})
-									log.info('sent done message to captions-read')
-								}, 3000)
+								stop_last_child()
 							}
 						})
 						children.captions_download.on('error', function(err) {
@@ -494,12 +513,7 @@ input a search query to use for identifying video candidates
 							log.info(`videos-details child exited with code ${code}, signal ${signal}`)
 
 							if (captions_download_quit) {
-								setTimeout(() => {
-									children.captions_read.send({
-										done: true
-									})
-									log.info('sent done message to captions-read')
-								}, 3000)
+								stop_last_child()
 							}
 						})
 						children.videos_details.on('error', function(err) {
@@ -524,7 +538,8 @@ input a search query to use for identifying video candidates
 						})
 						children.captions_read.on('exit', function(code,signal) {
 							log.info(`captions-read child exited with code ${code}, signal ${signal}`)
-
+							clearInterval(stopper_interval)
+							
 							Promise.all(results_promises)
 							.catch(function(err) {
 								log.error(err)
@@ -534,7 +549,7 @@ input a search query to use for identifying video candidates
 								
 								let results_path = 
 									USER_RESULTS_DIR_PATH + 
-									phrase.replace(/[\s'".;:\[\]\(\)!#&|]+/g, '_') + 
+									phrase.replace(/[\s'".;:\[\]\(\)!#&\|]+/g, '_') + 
 									'.html'
 								
 								console.log(translate(

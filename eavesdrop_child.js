@@ -19,7 +19,8 @@ import {
 	set_program_name,
 	TEMP_DIR_PATH,
 	VIDEO_PATH_PREFIX,
-	JSON_FILETYPE
+	JSON_FILETYPE,
+	REQUEST_DELAY_STEP
 } from './consts.js'
 
 import Logger from './logger.js'
@@ -246,37 +247,47 @@ function captions_download() {
 				if (msg.video_ids != undefined) {
 					idle = false
 					
+					// increase request_delay when throttling (Too many requests) errors occur
+					let request_delay = 0
+					
 					// get captions
 					let promises = []
 					for (let video_id of msg.video_ids) {
-						let p = api_client.youtube_timedtext_download(video_id)
-						.then(function(ttxt_path) {
-							log.info(`downloaded timedtext to ${ttxt_path}`)
+						setTimeout(() => {
+							let p = api_client.youtube_timedtext_download(video_id)
+							.then(function(ttxt_path) {
+								log.info(`downloaded timedtext to ${ttxt_path}`)
 							
-							if (ttxt_path) {
-								// send finished video to parent process
-								let result = {
-									ttxt_path: ttxt_path,
-									video_id: video_id
-								}
+								if (ttxt_path) {
+									// send finished video to parent process
+									let result = {
+										ttxt_path: ttxt_path,
+										video_id: video_id
+									}
 								
-								process.send(result)
-							}
-							else {
-								process.send('error:captions_download.path')
-							}
-						})
-						.catch(function(err) {
-							let out = `failed to get timedtext for ${video_id}`
-							log.error(out)
-							process.send(out)
-							process.send(err)
-						})
-						.finally(() => {
-							return Promise.resolve()
-						})
+									process.send(result)
+								}
+								else {
+									process.send('error:captions_download.path')
+								}
+							})
+							.catch(function(err) {
+								let out = `failed to get timedtext for ${video_id}`
+								log.error(out)
+								process.send(out)
+							
+								if (err == 'api_client.youtube_timedtext_download.video.throttle') {
+									request_delay += REQUEST_DELAY_STEP
+									process.send('increasing request delay to ' + request_delay)
+								}
+							})
+							.finally(() => {
+								return Promise.resolve()
+							})
 						
-						promises.push(p)
+							promises.push(p)
+						}, 
+						request_delay)
 					}
 					
 					Promise.all(promises)
@@ -550,7 +561,7 @@ function captions_read() {
 				
 				// wait to set kill signal while communications catch up
 				setTimeout(() => {
-					if (idle_video && idle_start) {
+					if ((idle_video && idle_start) || done) {
 						process.send('quitting')
 						resolve()
 					}
